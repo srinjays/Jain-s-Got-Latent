@@ -123,7 +123,7 @@ export default function LivePage() {
             <div className="curtain-wings" />
 
             {/* Spinning logo top-left */}
-            <div className="logo-wrap" style={{ position: "fixed", top: "16px", left: "20px", zIndex: 20 }}>
+            <div className="logo-wrap" style={{ position: "fixed", top: "60px", left: "20px", zIndex: 20 }}>
                 <Image src="/jgl-logo.png" alt="JGL" width={160} height={160}
                     className="logo" style={{ objectFit: "contain" }} priority />
             </div>
