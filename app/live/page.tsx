@@ -535,60 +535,80 @@ function ScoreReveal({ label, value, revealed, color }: {
 /* ── Roast popup — bottom-left toast ──────────────────── */
 function RoastPopup({ roasts }: { roasts: any[] }) {
     const [index, setIndex] = useState(0);
+    const [prev, setPrev] = useState<any>(null);
+    const [showPrev, setShowPrev] = useState(false);
+    const prevTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         if (roasts.length < 2) return;
         const iv = setInterval(() => {
-            setIndex(i => (i + 1) % roasts.length);
+            setIndex(i => {
+                const current = roasts[i];
+                setPrev(current);
+                setShowPrev(true);
+                if (prevTimerRef.current) clearTimeout(prevTimerRef.current);
+                prevTimerRef.current = setTimeout(() => setShowPrev(false), 1800);
+                return (i + 1) % roasts.length;
+            });
         }, 5000);
-        return () => clearInterval(iv);
+        return () => { clearInterval(iv); if (prevTimerRef.current) clearTimeout(prevTimerRef.current); };
     }, [roasts.length]);
 
-    useEffect(() => {
-        setIndex(0);
-    }, [roasts.length]);
+    useEffect(() => { setIndex(0); setPrev(null); setShowPrev(false); }, [roasts.length]);
 
     if (!roasts.length) return null;
     const current = roasts[index];
 
     return (
         <div style={{ position: "fixed", bottom: "24px", left: "24px", zIndex: 40, maxWidth: "340px", width: "calc(100vw - 48px)" }}>
+
+            {/* Previous message — floats up and blurs out */}
+            <AnimatePresence>
+                {showPrev && prev && (
+                    <motion.div
+                        key={prev.id + "_ghost"}
+                        initial={{ opacity: 0.75, filter: "blur(0px)", y: 0 }}
+                        animate={{ opacity: 0, filter: "blur(5px)", y: -18 }}
+                        transition={{ duration: 1.6, ease: "easeOut" }}
+                        style={{
+                            background: "rgba(10, 6, 18, 0.80)",
+                            border: "1px solid rgba(201,168,76,0.25)",
+                            borderRadius: "12px",
+                            padding: "12px 18px",
+                            marginBottom: "8px",
+                            backdropFilter: "blur(10px)",
+                        }}
+                    >
+                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.78rem" }}>{prev.teamName}</span>
+                        <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", margin: "4px 0 0", lineHeight: 1.4 }}>{prev.message}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Current message — slides up from below */}
             <AnimatePresence mode="wait">
                 <motion.div
                     key={current.id}
-                    initial={{ opacity: 0, x: -40, scale: 0.95 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -30, scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ type: "spring", stiffness: 340, damping: 30 }}
                     style={{
                         background: "rgba(10, 6, 18, 0.94)",
                         border: "1px solid var(--gold-border)",
                         borderRadius: "12px",
                         padding: "14px 18px",
-                        backdropFilter: "blur(12px)",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                        backdropFilter: "blur(14px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
                     }}
                 >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                         <span className="badge badge-gold" style={{ fontSize: "0.55rem" }}>MESSAGE</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.82rem" }}>
-                            {current.teamName}
-                        </span>
+                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.82rem" }}>{current.teamName}</span>
                     </div>
                     <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", lineHeight: 1.5, margin: 0 }}>
                         {current.message}
                     </p>
-                    {roasts.length > 1 && (
-                        <div style={{ display: "flex", gap: "4px", marginTop: "10px" }}>
-                            {roasts.map((_: any, i: number) => (
-                                <div key={i} style={{
-                                    height: "2px", flex: 1, borderRadius: "2px",
-                                    background: i === index ? "var(--gold)" : "rgba(255,255,255,0.12)",
-                                    transition: "background 0.3s",
-                                }} />
-                            ))}
-                        </div>
-                    )}
                 </motion.div>
             </AnimatePresence>
         </div>
