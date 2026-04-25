@@ -175,14 +175,25 @@ export default function AdminPage() {
                                     </ACard>
 
                                     <ACard title="Scoring Windows">
-                                        <Toggle label="Self-Score Open" value={!!event?.selfScoreEnabled} onChange={v => {
-                                            setSelfScoreEnabled(v);
-                                            // When admin enables self-score, unlock current team so they can (re-)score
-                                            if (v && event?.currentTeamId) {
-                                                updateTeam(event.currentTeamId, { selfScoreLocked: false, selfScore: null });
-                                            }
-                                        }} />
+                                        <Toggle label="Self-Score Open" value={!!event?.selfScoreEnabled} onChange={v => setSelfScoreEnabled(v)} />
                                         <Toggle label="Judge Scoring Open" value={!!event?.judgeScoringEnabled} onChange={v => setJudgeScoringEnabled(v)} />
+                                        <div style={{ marginTop: "12px", borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
+                                            <button
+                                                className="btn"
+                                                style={{ width: "100%", fontSize: "0.78rem" }}
+                                                disabled={!event?.currentTeamId}
+                                                onClick={() => {
+                                                    if (event?.currentTeamId) {
+                                                        updateTeam(event.currentTeamId, { selfScoreLocked: false, selfScore: null });
+                                                    }
+                                                }}
+                                            >
+                                                Unlock Team Re-Score
+                                            </button>
+                                            <p style={{ color: "var(--text-dim)", fontSize: "0.68rem", marginTop: "6px", textAlign: "center" }}>
+                                                Clears lock for current team
+                                            </p>
+                                        </div>
                                     </ACard>
 
                                     <ACard title="Score Reveals">
