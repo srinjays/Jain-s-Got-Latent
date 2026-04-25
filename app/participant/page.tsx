@@ -36,6 +36,8 @@ function ParticipantContent() {
     const selfEnabled = event?.selfScoreEnabled;
     // Always read lock from Firebase — never use local state for this
     const isLocked = !!currentTeam?.selfScoreLocked;
+    // Only the team currently on stage can score
+    const isPerforming = !!event?.currentTeamId && currentTeam?.id === event?.currentTeamId;
 
     const handleScore = async () => {
         const num = Number(selfScore);
@@ -43,7 +45,7 @@ function ParticipantContent() {
             setScoreError("Enter a number between 0 and 10");
             return;
         }
-        if (!currentTeam || isLocked) return;
+        if (!currentTeam || isLocked || !isPerforming) return;
         setScoreError("");
         setSubmitting(true);
         await submitSelfScore(currentTeam.id, Math.round(num * 10) / 10);
@@ -113,15 +115,17 @@ function ParticipantContent() {
                     <motion.div className="card" style={{ padding: "22px" }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                         <span className="label-cap" style={{ color: "var(--gold)" }}>Self Score</span>
 
-                        {!selfEnabled && !isLocked ? (
-                            <div className="row-item" style={{ padding: "20px", textAlign: "center", marginTop: "10px" }}>
-                                <p style={{ color: "var(--text-sub)", fontSize: "0.9rem" }}>🔒 Scoring window not open yet</p>
-                                <p style={{ color: "var(--text-dim)", fontSize: "0.78rem", marginTop: "4px" }}>Admin will enable this before your slot</p>
-                            </div>
-                        ) : isLocked ? (
+                        {isLocked ? (
                             <div className="row-item" style={{ padding: "20px", textAlign: "center", marginTop: "10px" }}>
                                 <div style={{ fontFamily: "var(--font-display)", fontSize: "3rem", color: "var(--gold-light)", letterSpacing: "0.1em" }}>{t?.selfScore ?? selfScore}</div>
-                                <p style={{ color: "var(--text-sub)", fontSize: "0.8rem", marginTop: "6px" }}>✓ Locked in</p>
+                                <p style={{ color: "var(--text-sub)", fontSize: "0.8rem", marginTop: "6px" }}>Locked in</p>
+                            </div>
+                        ) : !selfEnabled || !isPerforming ? (
+                            <div className="row-item" style={{ padding: "20px", textAlign: "center", marginTop: "10px" }}>
+                                <p style={{ color: "var(--text-sub)", fontSize: "0.9rem" }}>
+                                    {!isPerforming && selfEnabled ? "Not your turn yet" : "Scoring window not open yet"}
+                                </p>
+                                <p style={{ color: "var(--text-dim)", fontSize: "0.78rem", marginTop: "4px" }}>Admin will enable this before your slot</p>
                             </div>
                         ) : (
                             <div style={{ marginTop: "12px" }}>
