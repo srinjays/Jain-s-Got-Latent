@@ -15,7 +15,6 @@ function ParticipantContent() {
     const [team, setTeam] = useState<any>(null);
     const [selfScore, setSelfScore] = useState("");
     const [scoreError, setScoreError] = useState("");
-    const [scoreLocked, setScoreLocked] = useState(false);
     const [roastText, setRoastText] = useState("");
     const [roastSent, setRoastSent] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -28,15 +27,15 @@ function ParticipantContent() {
         if (found) {
             setTeam(found);
             setLoggedIn(true);
-            setScoreLocked(found.selfScoreLocked);
             if (found.selfScore != null) setSelfScore(String(found.selfScore));
         }
         else setLoginError("Wrong PIN. Try again.");
     };
 
-    const currentTeam = team || teams.find((t: any) => t.pin === pinInput.trim());
+    const currentTeam = team ? teams.find((t: any) => t.id === team.id) || team : teams.find((t: any) => t.pin === pinInput.trim());
     const selfEnabled = event?.selfScoreEnabled;
-    const isLocked = currentTeam?.selfScoreLocked || scoreLocked;
+    // Always read lock from Firebase — never use local state for this
+    const isLocked = !!currentTeam?.selfScoreLocked;
 
     const handleScore = async () => {
         const num = Number(selfScore);
@@ -44,11 +43,10 @@ function ParticipantContent() {
             setScoreError("Enter a number between 0 and 10");
             return;
         }
-        if (!currentTeam) return;
+        if (!currentTeam || isLocked) return;
         setScoreError("");
         setSubmitting(true);
         await submitSelfScore(currentTeam.id, Math.round(num * 10) / 10);
-        setScoreLocked(true);
         setSubmitting(false);
     };
 
