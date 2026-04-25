@@ -72,7 +72,8 @@ export default function AdminPage() {
         setUploading(false);
     };
 
-    const deleteMeme = async (memeId: string) => {
+    const deleteMeme = async (memeId: string, memeName: string) => {
+        if (!confirm(`Delete "${memeName}" from the soundboard? This cannot be undone.`)) return;
         await remove(ref(db, `memes/${memeId}`));
     };
 
@@ -93,7 +94,7 @@ export default function AdminPage() {
     };
 
     const wipeAllMemes = async () => {
-        if (!confirm("Delete ALL memes from the soundboard? This cannot be undone.")) return;
+        if (!confirm(`WARNING: This will permanently delete ALL ${memes.length} sound(s) from the soundboard. This cannot be undone. Are you sure?`)) return;
         await set(ref(db, "memes"), null);
     };
 
@@ -328,12 +329,12 @@ export default function AdminPage() {
 
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "16px" }}>
                                     <ACard title="Soundboard">
-                                        <p style={{ color: "var(--text-sub)", fontSize: "0.83rem", marginBottom: "14px" }}>Click to <strong style={{ color: "var(--gold-light)" }}>play locally</strong> + trigger on live screen. Right-click to delete.</p>
+                                        <p style={{ color: "var(--text-sub)", fontSize: "0.83rem", marginBottom: "14px" }}>Click to <strong style={{ color: "var(--gold-light)" }}>play locally</strong> + trigger on live screen. Right-click a sound to delete (confirmation required).</p>
                                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: "10px", marginBottom: "14px" }}>
                                             {memes.map((m: any) => (
                                                 <motion.button key={m.id} whileTap={{ scale: 0.93 }}
                                                     onClick={() => playMemeLocally(m)}
-                                                    onContextMenu={(e) => { e.preventDefault(); deleteMeme(m.id); }}
+                                                    onContextMenu={(e) => { e.preventDefault(); deleteMeme(m.id, m.name); }}
                                                     className="row-item" style={{ padding: "16px 10px", cursor: "pointer", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                                                     <span style={{ color: "var(--text-sub)", fontSize: "0.7rem", fontWeight: 600, textAlign: "center" }}>{m.type.toUpperCase()}</span>
                                                     <span style={{ color: "var(--text)", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{m.name}</span>
