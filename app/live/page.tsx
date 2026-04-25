@@ -185,17 +185,12 @@ export default function LivePage() {
                         <div className="diamond-line" style={{ justifyContent: "center", marginBottom: "18px", fontSize: "0.6rem", letterSpacing: "0.2em" }}>
                             ◆ LIVE MARKS BOARD ◆
                         </div>
-                        <div style={{ width: "100%", marginTop: "-14%", marginBottom: "-17%", pointerEvents: "none" }}>
+                        <div style={{ width: "100%", height: "200px", position: "relative", marginBottom: "16px" }}>
                             <Image
                                 src="/jgl-logo.png"
                                 alt="Jain's Got Latent"
-                                width={600}
-                                height={300}
-                                style={{
-                                    width: "100%",
-                                    height: "auto",
-                                    filter: "drop-shadow(0 0 18px rgba(201,168,76,0.85)) drop-shadow(0 0 48px rgba(201,168,76,0.4))",
-                                }}
+                                fill
+                                style={{ objectFit: "contain", objectPosition: "center" }}
                             />
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "0" }}>
@@ -458,31 +453,8 @@ export default function LivePage() {
                 </motion.div>
             </div>
 
-            {/* ── Roast ticker ────────────────────────── */}
-            <AnimatePresence>
-                {roasts.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                        style={{
-                            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30,
-                            background: "rgba(10, 6, 18, 0.94)",
-                            borderTop: "1px solid var(--gold-border)",
-                            padding: "9px 0",
-                            overflow: "hidden",
-                            backdropFilter: "blur(8px)",
-                        }}
-                    >
-                        <div className="ticker" style={{ color: "var(--text-sub)", fontSize: "0.85rem" }}>
-                            {roasts.map((r: any, i: number) => (
-                                <span key={r.id}>
-                                    🔥 <strong style={{ color: "var(--gold)" }}>{r.teamName}:</strong> {r.message}
-                                    {i < roasts.length - 1 && <span style={{ margin: "0 40px", color: "var(--text-dim)" }}>◆</span>}
-                                </span>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* ── Roast popup — bottom-left corner ──────────── */}
+            <RoastPopup roasts={roasts} />
 
             {/* ── Meme video overlay ───────────────────── */}
             <AnimatePresence>
@@ -555,6 +527,69 @@ function ScoreReveal({ label, value, revealed, color }: {
                         </div>
                     </motion.div>
                 )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+/* ── Roast popup — bottom-left toast ──────────────────── */
+function RoastPopup({ roasts }: { roasts: any[] }) {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        if (roasts.length < 2) return;
+        const iv = setInterval(() => {
+            setIndex(i => (i + 1) % roasts.length);
+        }, 5000);
+        return () => clearInterval(iv);
+    }, [roasts.length]);
+
+    useEffect(() => {
+        setIndex(0);
+    }, [roasts.length]);
+
+    if (!roasts.length) return null;
+    const current = roasts[index];
+
+    return (
+        <div style={{ position: "fixed", bottom: "24px", left: "24px", zIndex: 40, maxWidth: "340px", width: "calc(100vw - 48px)" }}>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={current.id}
+                    initial={{ opacity: 0, x: -40, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -30, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                    style={{
+                        background: "rgba(10, 6, 18, 0.94)",
+                        border: "1px solid var(--gold-border)",
+                        borderRadius: "12px",
+                        padding: "14px 18px",
+                        backdropFilter: "blur(12px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                        <span className="badge badge-gold" style={{ fontSize: "0.55rem" }}>MESSAGE</span>
+                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.82rem" }}>
+                            {current.teamName}
+                        </span>
+                    </div>
+                    <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", lineHeight: 1.5, margin: 0 }}>
+                        {current.message}
+                    </p>
+                    {roasts.length > 1 && (
+                        <div style={{ display: "flex", gap: "4px", marginTop: "10px" }}>
+                            {roasts.map((_: any, i: number) => (
+                                <div key={i} style={{
+                                    height: "2px", flex: 1, borderRadius: "2px",
+                                    background: i === index ? "var(--gold)" : "rgba(255,255,255,0.12)",
+                                    transition: "background 0.3s",
+                                }} />
+                            ))}
+                        </div>
+                    )}
+                </motion.div>
             </AnimatePresence>
         </div>
     );
