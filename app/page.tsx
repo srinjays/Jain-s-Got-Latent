@@ -41,17 +41,17 @@ export default function PortalPage() {
         style={{
           position: "relative",
           zIndex: 1,
-          width: "min(440px, 92vw)",
-          padding: "28px 28px 24px",
+          width: "min(500px, 92vw)",
+          padding: "16px 28px 24px",
           borderColor: "rgba(255,255,255,0.10)",
         }}
       >
         {/* Logo */}
         <div style={{
           width: "100%",
-          height: "280px",
+          height: "420px",
           position: "relative",
-          marginBottom: "20px",
+          marginBottom: "12px",
         }}>
           <Image
             src="/jgl-logo.png"
