@@ -28,7 +28,7 @@ export default function PortalPage() {
       <div className="curtain-wings" />
 
       {/* Spinning logo — top left */}
-      <div className="logo-wrap" style={{ position: "fixed", top: "16px", left: "20px", zIndex: 50 }}>
+      <div className="logo-wrap" style={{ position: "fixed", top: "32px", left: "20px", zIndex: 50 }}>
         <Image src="/jgl-logo.png" alt="JGL" width={150} height={150} className="logo" style={{ objectFit: "contain" }} priority />
       </div>
 
@@ -46,8 +46,8 @@ export default function PortalPage() {
           borderColor: "rgba(255,255,255,0.10)",
         }}
       >
-        {/* Logo — negative margins eat the PNG's transparent padding */}
-        <div style={{ width: "100%", marginTop: "-20%", marginBottom: "-22%", textAlign: "center", pointerEvents: "none" }}>
+        {/* Logo — inside card with equal top/bottom padding */}
+        <div style={{ width: "100%", padding: "20px 0", textAlign: "center", pointerEvents: "none" }}>
           <Image
             src="/jgl-logo.png"
             alt="Jain's Got Latent"
