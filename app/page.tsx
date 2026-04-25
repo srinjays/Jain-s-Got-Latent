@@ -46,8 +46,8 @@ export default function PortalPage() {
           borderColor: "rgba(255,255,255,0.10)",
         }}
       >
-        {/* Logo — natural size, no blank space */}
-        <div style={{ width: "100%", marginBottom: "16px", textAlign: "center" }}>
+        {/* Logo — negative margins eat the PNG's transparent padding */}
+        <div style={{ width: "100%", marginTop: "-12%", marginBottom: "-14%", textAlign: "center" }}>
           <Image
             src="/jgl-logo.png"
             alt="Jain's Got Latent"
@@ -56,7 +56,7 @@ export default function PortalPage() {
             style={{
               width: "100%",
               height: "auto",
-              filter: "drop-shadow(0 0 18px rgba(201,168,76,0.8)) drop-shadow(0 0 40px rgba(201,168,76,0.4))",
+              filter: "drop-shadow(0 0 18px rgba(201,168,76,0.85)) drop-shadow(0 0 48px rgba(201,168,76,0.45))",
             }}
             priority
           />
