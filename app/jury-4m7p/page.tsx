@@ -59,7 +59,7 @@ export default function JudgePage() {
         <PageShell>
             <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
                 <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    className="card" style={{ padding: "40px", maxWidth: "400px", width: "100%", textAlign: "center" }}>
+                    className="card" style={{ padding: "clamp(20px,5vw,40px)", maxWidth: "400px", width: "100%", textAlign: "center" }}>
                     <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--text)", letterSpacing: "0.05em", marginBottom: "6px" }}>JUDGE LOGIN</div>
                     <p style={{ color: "var(--text-sub)", marginBottom: "24px", fontSize: "0.88rem" }}>Select your name and enter your PIN</p>
 
@@ -88,14 +88,14 @@ export default function JudgePage() {
     /* ── JUDGE PANEL ───────────────────────────────────────────── */
     return (
         <PageShell>
-            <div style={{ padding: "50px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ padding: "clamp(24px,5vw,50px) clamp(12px,4vw,20px) 40px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={{ width: "100%", maxWidth: "620px" }}>
 
                     {/* Header */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
                         <div>
                             <p className="label-cap" style={{ color: "var(--gold)", marginBottom: "4px" }}>Judge Panel</p>
-                            <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--text)", letterSpacing: "0.04em" }}>{judge.name}</div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.4rem,5vw,2rem)", color: "var(--text)", letterSpacing: "0.04em" }}>{judge.name}</div>
                         </div>
                         <button className="btn" onClick={() => setJudge(null)}>Logout</button>
                     </div>
@@ -104,10 +104,10 @@ export default function JudgePage() {
                     <AnimatePresence mode="wait">
                         {currentTeam ? (
                             <motion.div key={currentTeam.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                                className="card" style={{ padding: "24px", marginBottom: "16px" }}>
+                                className="card" style={{ padding: "clamp(14px,4vw,24px)", marginBottom: "16px" }}>
                                 <span className="badge badge-gold" style={{ marginBottom: "14px", display: "inline-block", fontSize: "0.7rem" }}>NOW SCORING</span>
 
-                                <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--text)", letterSpacing: "0.04em", marginBottom: "6px" }}>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.3rem,5vw,2rem)", color: "var(--text)", letterSpacing: "0.04em", marginBottom: "6px" }}>
                                     {currentTeam.teamName}
                                 </div>
                                 <p style={{ color: "var(--text-sub)", fontSize: "0.95rem", marginBottom: currentTeam.teamDescription ? "6px" : "18px" }}>
@@ -122,7 +122,7 @@ export default function JudgePage() {
                                 {/* Members */}
                                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
                                     <span className="label-cap" style={{ color: "var(--gold)", marginBottom: "12px", display: "block", fontSize: "0.7rem" }}>Members</span>
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: "10px" }}>
                                         {(currentTeam.members || []).map((m: any, idx: number) => (
                                             <div key={idx} style={{
                                                 background: "var(--row)",
@@ -153,7 +153,7 @@ export default function JudgePage() {
 
                     {/* Single score input */}
                     {currentTeam && (
-                        <motion.div className="card" style={{ padding: "28px" }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                        <motion.div className="card" style={{ padding: "clamp(16px,4vw,28px)" }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                             <div style={{ marginBottom: "20px" }}>
                                 <span className="label-cap" style={{ color: "var(--gold)", marginBottom: "6px", display: "block" }}>Your Score — 0 to 10</span>
                                 {!scoringEnabled && !submitted && (
@@ -172,10 +172,10 @@ export default function JudgePage() {
                                     style={{
                                         width: "100%",
                                         textAlign: "center",
-                                        fontSize: "3rem",
+                                        fontSize: "clamp(2rem,8vw,3rem)",
                                         fontFamily: "var(--font-display)",
                                         letterSpacing: "0.08em",
-                                        padding: "20px",
+                                        padding: "clamp(12px,4vw,20px)",
                                         cursor: submitted ? "not-allowed" : "text",
                                         opacity: submitted ? 0.55 : 1,
                                     }}

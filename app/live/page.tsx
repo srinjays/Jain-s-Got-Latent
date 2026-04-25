@@ -185,12 +185,17 @@ export default function LivePage() {
                         <div className="diamond-line" style={{ justifyContent: "center", marginBottom: "18px", fontSize: "0.6rem", letterSpacing: "0.2em" }}>
                             ◆ LIVE MARKS BOARD ◆
                         </div>
-                        <div style={{ width: "100%", height: "200px", position: "relative", marginBottom: "16px" }}>
+                        <div style={{ width: "100%", marginTop: "-14%", marginBottom: "-17%", pointerEvents: "none" }}>
                             <Image
                                 src="/jgl-logo.png"
                                 alt="Jain's Got Latent"
-                                fill
-                                style={{ objectFit: "contain", objectPosition: "center" }}
+                                width={600}
+                                height={300}
+                                style={{
+                                    width: "100%",
+                                    height: "auto",
+                                    filter: "drop-shadow(0 0 18px rgba(201,168,76,0.85)) drop-shadow(0 0 48px rgba(201,168,76,0.4))",
+                                }}
                             />
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "0" }}>
