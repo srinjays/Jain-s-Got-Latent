@@ -27,23 +27,7 @@ export default function PortalPage() {
       <div className="curtain-blur-overlay" />
       <div className="curtain-wings" />
 
-      {/* Spinning logo — top left, BIG */}
-      <div
-        className="logo-wrap"
-        style={{ position: "fixed", top: "16px", left: "20px", zIndex: 50, cursor: "pointer" }}
-      >
-        <Image
-          src="/jgl-logo.png"
-          alt="JGL"
-          width={160}
-          height={160}
-          className="logo"
-          style={{ objectFit: "contain" }}
-          priority
-        />
-      </div>
-
-      {/* ── Center card ───────────────────────────── */}
+      {/* Center card */}
       <motion.div
         initial={{ opacity: 0, y: 28, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -52,44 +36,39 @@ export default function PortalPage() {
         style={{
           position: "relative",
           zIndex: 1,
-          width: "min(500px, 92vw)",
-          padding: "36px 32px 30px",
+          width: "min(440px, 92vw)",
+          padding: "28px 28px 24px",
           borderColor: "rgba(255,255,255,0.10)",
         }}
       >
-        {/* Diamond label */}
-        <div className="diamond-line" style={{ justifyContent: "center", marginBottom: "24px", fontSize: "0.6rem", letterSpacing: "0.2em" }}>
-          ◆ LIVE LEADERBOARD ◆
-        </div>
-
-        {/* Logo wordmark — use a fixed-height container so it doesn't overflow */}
+        {/* Logo */}
         <div style={{
           width: "100%",
-          height: "320px",
+          height: "180px",
           position: "relative",
-          marginBottom: "8px",
+          marginBottom: "20px",
         }}>
           <Image
             src="/jgl-logo.png"
             alt="Jain's Got Latent"
             fill
             style={{ objectFit: "contain", objectPosition: "center" }}
+            priority
           />
         </div>
 
         {/* Thin divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "18px 0 22px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
           <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
           <span style={{ color: "var(--gold)", fontSize: "0.45rem" }}>◆</span>
           <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
         </div>
 
-        {/* ── Role rows — Teams only see Register + Leaderboard ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px" }}>
+        {/* Only Register is public */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {[
-            { label: "�  Register Your Team", sub: "Create a team & get your PIN", href: "/register" },
-            { label: "🏆  Live Leaderboard", sub: "See how teams are ranked", href: "/live" },
-            { label: "🎤  Team Dashboard", sub: "Login with your team PIN", href: "/participant" },
+            { label: "Register Your Team", sub: "Create a team and get your PIN", href: "/register" },
+            { label: "Team Login", sub: "Login with your team PIN", href: "/participant" },
           ].map((item, i) => (
             <motion.button
               key={item.href}
@@ -102,7 +81,7 @@ export default function PortalPage() {
               className="row-item"
               style={{
                 width: "100%",
-                padding: "15px 18px",
+                padding: "16px 18px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -113,34 +92,15 @@ export default function PortalPage() {
               }}
             >
               <div>
-                <div style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.88rem", letterSpacing: "0.03em" }}>
+                <div style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem", letterSpacing: "0.03em" }}>
                   {item.label}
                 </div>
-                <div style={{ color: "var(--text-dim)", fontSize: "0.73rem", marginTop: "2px" }}>
+                <div style={{ color: "var(--text-sub)", fontSize: "0.74rem", marginTop: "2px" }}>
                   {item.sub}
                 </div>
               </div>
               <span style={{ color: "var(--text-dim)", fontSize: "0.9rem", flexShrink: 0 }}>›</span>
             </motion.button>
-          ))}
-        </div>
-
-        {/* Bottom nav pills — matching screenshot */}
-        <div style={{ display: "flex", gap: "7px", justifyContent: "center" }}>
-          {[
-            { key: "LOGIN", href: "/participant", gold: false },
-            { key: "STAGE", href: "/live", gold: false },
-            { key: "VOTE", href: "/register", gold: false },
-            { key: "LEADERBOARD", href: "/live", gold: true },
-          ].map((item) => (
-            <button
-              key={item.key}
-              className={`btn${item.gold ? " active" : ""}`}
-              style={{ padding: "8px 13px", fontSize: "0.62rem", minWidth: "unset" }}
-              onClick={() => router.push(item.href)}
-            >
-              {item.key}
-            </button>
           ))}
         </div>
       </motion.div>
@@ -152,7 +112,7 @@ export default function PortalPage() {
         style={{
           position: "relative", zIndex: 1,
           color: "var(--text-dim)", fontSize: "0.62rem",
-          marginTop: "20px", letterSpacing: "0.1em", textTransform: "uppercase",
+          marginTop: "16px", letterSpacing: "0.1em", textTransform: "uppercase",
         }}
       >
         JGL 2026 · Jain University

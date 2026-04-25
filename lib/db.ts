@@ -29,13 +29,14 @@ export const registerTeam = async (teamData: any) => {
 
 export const updateTeam = (teamId: string, data: any) => update(ref(db, `teams/${teamId}`), data);
 export const setTeamEliminated = (teamId: string, val: boolean) => update(ref(db, `teams/${teamId}`), { eliminated: val });
+export const deleteTeam = (teamId: string) => remove(ref(db, `teams/${teamId}`));
 
 export const submitSelfScore = (teamId: string, score: number) =>
     update(ref(db, `teams/${teamId}`), { selfScore: score, selfScoreLocked: true });
 
 // ── Scores ─────────────────────────────────────────────────────────────────
-export const submitJudgeScore = (teamId: string, judgeId: string, scores: any) =>
-    set(ref(db, `scores/${teamId}/${judgeId}`), { ...scores, submitted: true, timestamp: Date.now() });
+export const submitJudgeScore = (teamId: string, judgeId: string, score: number) =>
+    set(ref(db, `scores/${teamId}/${judgeId}`), { score, submitted: true, timestamp: Date.now() });
 
 // ── Event Control ──────────────────────────────────────────────────────────
 export const setCurrentTeam = (teamId: string) => update(ref(db, "event"), { currentTeamId: teamId });

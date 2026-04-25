@@ -81,15 +81,14 @@ export const useLeaderboard = () => {
         const judgeEntries = Object.values(teamScores) as any[];
         const submitted = judgeEntries.filter((j) => j.submitted);
         const judgeAvg = submitted.length
-            ? submitted.reduce((acc, j) => acc + ((j.humour + j.technical + j.creativity) / 3), 0) / submitted.length
+            ? Math.round((submitted.reduce((acc, j) => acc + (j.score ?? 0), 0) / submitted.length) * 10) / 10
             : null;
         return {
             ...team,
-            judgeAvg: judgeAvg !== null ? Math.round(judgeAvg * 10) / 10 : null,
+            judgeAvg,
             judgeCount: submitted.length,
         };
     }).sort((a: any, b: any) => {
-        // Eliminated teams sink to bottom
         if (a.eliminated && !b.eliminated) return 1;
         if (!a.eliminated && b.eliminated) return -1;
         return (b.judgeAvg ?? -1) - (a.judgeAvg ?? -1);

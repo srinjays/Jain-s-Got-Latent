@@ -11,7 +11,7 @@ import {
     triggerMeme, clearMeme,
     approveRoast, rejectRoast,
     addJudge, removeJudge,
-    uploadMemeFile, setTeamEliminated,
+    uploadMemeFile, setTeamEliminated, deleteTeam,
 } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import { ref, push, remove, set } from "firebase/database";
@@ -102,7 +102,6 @@ export default function AdminPage() {
             <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
                 <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     className="card" style={{ padding: "40px", maxWidth: "380px", width: "100%", textAlign: "center" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "12px" }}>🛸</div>
                     <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--text)", letterSpacing: "0.05em", marginBottom: "6px" }}>TECH CONTROL</div>
                     <p style={{ color: "var(--text-sub)", marginBottom: "24px", fontSize: "0.88rem" }}>Admin access only</p>
                     <input className="input" type="password" value={pinInput} onChange={e => setPinInput(e.target.value)}
@@ -127,7 +126,7 @@ export default function AdminPage() {
                             <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--text)", letterSpacing: "0.04em" }}>TECH CONTROL</div>
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
-                            <button className="btn-gold" style={{ fontSize: "0.78rem", padding: "8px 14px" }} onClick={() => window.open("/live", "_blank")}>📺 Live Screen</button>
+                            <button className="btn-gold" style={{ fontSize: "0.78rem", padding: "8px 14px" }} onClick={() => window.open("/live", "_blank")}>Live Screen</button>
                             <button className="btn" onClick={() => setAuthed(false)}>Logout</button>
                         </div>
                     </div>
@@ -183,10 +182,10 @@ export default function AdminPage() {
                                     <ACard title="Score Reveals">
                                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                             <button onClick={() => setSelfScoreRevealed(!event?.selfScoreRevealed)} className={event?.selfScoreRevealed ? "btn-danger" : "btn-gold"} style={{ width: "100%" }}>
-                                                {event?.selfScoreRevealed ? "Hide Self-Score" : "⭐ Reveal Self-Score"}
+                                                {event?.selfScoreRevealed ? "Hide Self-Score" : "Reveal Self-Score"}
                                             </button>
                                             <button onClick={() => setJudgeScoreRevealed(!event?.judgeScoreRevealed)} className={event?.judgeScoreRevealed ? "btn-danger" : "btn-purple"} style={{ width: "100%" }}>
-                                                {event?.judgeScoreRevealed ? "Hide Judge Score" : "⚖️ Reveal Judge Score"}
+                                                {event?.judgeScoreRevealed ? "Hide Judge Score" : "Reveal Judge Score"}
                                             </button>
                                             <button className="btn" style={{ fontSize: "0.78rem" }} onClick={() => { setSelfScoreRevealed(false); setJudgeScoreRevealed(false); }}>
                                                 Reset Both
@@ -262,27 +261,40 @@ export default function AdminPage() {
                                                                                 <span style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.85rem" }}>{m.name}</span>
                                                                                 {idx === 0 && <span className="badge badge-gold" style={{ fontSize: "0.55rem" }}>Lead</span>}
                                                                             </div>
-                                                                            <div style={{ color: "var(--text-dim)", fontSize: "0.72rem", lineHeight: 1.8 }}>
-                                                                                <div>📋 {m.usn}</div>
-                                                                                <div>📚 {m.branch} · {m.year} Year</div>
-                                                                                {m.funFact && <div style={{ color: "var(--text-sub)", fontStyle: "italic" }}>💬 {m.funFact}</div>}
+                                                                            <div style={{ color: "var(--text-sub)", fontSize: "0.72rem", lineHeight: 1.8 }}>
+                                                                                <div>{m.usn}</div>
+                                                                                <div>{m.branch} · {m.year} Year</div>
+                                                                                {m.funFact && <div style={{ color: "var(--text)", fontStyle: "italic" }}>" {m.funFact}"</div>}
                                                                             </div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
 
                                                                 {/* Footer */}
-                                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                                                                     <div style={{ color: "var(--text-dim)", fontSize: "0.72rem" }}>
                                                                         PIN: <span style={{ color: "var(--gold-light)", fontFamily: "var(--font-display)", fontSize: "1rem", letterSpacing: "0.12em" }}>{t.pin}</span>
                                                                         {t.registeredAt && <span style={{ marginLeft: "10px" }}>· {new Date(t.registeredAt).toLocaleTimeString()}</span>}
                                                                     </div>
-                                                                    <button
-                                                                        className={isCurrent ? "btn-danger" : "btn-gold"}
-                                                                        style={{ fontSize: "0.72rem", padding: "6px 14px" }}
-                                                                        onClick={() => setCurrentTeam(isCurrent ? "" : t.id)}>
-                                                                        {isCurrent ? "✕ Deselect" : "▸ Set On Stage"}
-                                                                    </button>
+                                                                    <div style={{ display: "flex", gap: "8px" }}>
+                                                                        <button
+                                                                            className={isCurrent ? "btn-danger" : "btn-gold"}
+                                                                            style={{ fontSize: "0.72rem", padding: "6px 14px" }}
+                                                                            onClick={() => setCurrentTeam(isCurrent ? "" : t.id)}>
+                                                                            {isCurrent ? "Deselect" : "Set On Stage"}
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn-danger"
+                                                                            style={{ fontSize: "0.72rem", padding: "6px 14px" }}
+                                                                            onClick={() => {
+                                                                                if (confirm(`Remove "${t.teamName}" from the list? This cannot be undone.`)) {
+                                                                                    deleteTeam(t.id);
+                                                                                    setExpandedTeam(null);
+                                                                                }
+                                                                            }}>
+                                                                            Remove Team
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </motion.div>
@@ -306,8 +318,8 @@ export default function AdminPage() {
                                                     onClick={() => playMemeLocally(m)}
                                                     onContextMenu={(e) => { e.preventDefault(); deleteMeme(m.id); }}
                                                     className="row-item" style={{ padding: "16px 10px", cursor: "pointer", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                                                    <span style={{ fontSize: "1.8rem" }}>{m.emoji}</span>
-                                                    <span style={{ color: "var(--text)", fontSize: "0.8rem", fontWeight: 600, textAlign: "center" }}>{m.name}</span>
+                                                    <span style={{ color: "var(--text-sub)", fontSize: "0.7rem", fontWeight: 600, textAlign: "center" }}>{m.type.toUpperCase()}</span>
+                                                    <span style={{ color: "var(--text)", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{m.name}</span>
                                                     <span className="badge badge-purple" style={{ fontSize: "0.65rem" }}>{m.type}</span>
                                                 </motion.button>
                                             ))}
@@ -316,8 +328,8 @@ export default function AdminPage() {
                                             )}
                                         </div>
                                         <div style={{ display: "flex", gap: "8px" }}>
-                                            <button className="btn" style={{ fontSize: "0.78rem" }} onClick={stopLocalAudio}>🛑 Stop & Clear</button>
-                                            {memes.length > 0 && <button className="btn-danger" style={{ fontSize: "0.78rem" }} onClick={wipeAllMemes}>🗑 Wipe All</button>}
+                                            <button className="btn" style={{ fontSize: "0.78rem" }} onClick={stopLocalAudio}>Stop / Clear</button>
+                                            {memes.length > 0 && <button className="btn-danger" style={{ fontSize: "0.78rem" }} onClick={wipeAllMemes}>Wipe All</button>}
                                         </div>
                                     </ACard>
 
@@ -327,10 +339,7 @@ export default function AdminPage() {
                                                 <span className="label-cap">Name</span>
                                                 <input className="input" value={mName} onChange={e => setMName(e.target.value)} />
                                             </div>
-                                            <div>
-                                                <span className="label-cap">Emoji</span>
-                                                <input className="input" value={mEmoji} onChange={e => setMEmoji(e.target.value)} style={{ width: "70px" }} />
-                                            </div>
+
                                             <div style={{ display: "flex", gap: "8px" }}>
                                                 {(["audio", "video"] as const).map(t => (
                                                     <button key={t} onClick={() => { setMType(t); setMFile(null); if (fileRef.current) fileRef.current.value = ""; }}
@@ -354,8 +363,8 @@ export default function AdminPage() {
                                                 />
                                                 {mFile && (
                                                     <p style={{ color: mFile.size > 10 * 1024 * 1024 ? "#F87171" : "var(--text-dim)", fontSize: "0.72rem", marginTop: "6px" }}>
-                                                        📂 {mFile.name} · {mFile.size > 1024 * 1024 ? `${(mFile.size / 1024 / 1024).toFixed(1)} MB` : `${Math.round(mFile.size / 1024)} KB`}
-                                                        {mFile.size > 10 * 1024 * 1024 && " ⚠ Too large (max 10MB)"}
+                                                        {mFile.name} · {mFile.size > 1024 * 1024 ? `${(mFile.size / 1024 / 1024).toFixed(1)} MB` : `${Math.round(mFile.size / 1024)} KB`}
+                                                        {mFile.size > 10 * 1024 * 1024 && " — Too large (max 10MB)"}
                                                     </p>
                                                 )}
                                             </div>
