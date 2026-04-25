@@ -28,7 +28,7 @@ export default function PageShell({
             {!hideLogo && (
                 <div
                     className="logo-wrap"
-                    style={{ position: "fixed", top: "32px", left: "20px", zIndex: 50 }}
+                    style={{ position: "fixed", top: "60px", left: "20px", zIndex: 50 }}
                     onClick={() => router.push("/")}
                 >
                     <Image

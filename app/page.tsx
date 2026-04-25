@@ -28,7 +28,7 @@ export default function PortalPage() {
       <div className="curtain-wings" />
 
       {/* Spinning logo — top left */}
-      <div className="logo-wrap" style={{ position: "fixed", top: "32px", left: "20px", zIndex: 50 }}>
+      <div className="logo-wrap" style={{ position: "fixed", top: "60px", left: "20px", zIndex: 50 }}>
         <Image src="/jgl-logo.png" alt="JGL" width={150} height={150} className="logo" style={{ objectFit: "contain" }} priority />
       </div>
 
