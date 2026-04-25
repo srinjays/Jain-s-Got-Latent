@@ -11,7 +11,7 @@ import {
     triggerMeme, clearMeme,
     approveRoast, rejectRoast,
     addJudge, removeJudge,
-    uploadMemeFile, setTeamEliminated, deleteTeam,
+    uploadMemeFile, setTeamEliminated, deleteTeam, updateTeam,
 } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import { ref, push, remove, set } from "firebase/database";
@@ -175,7 +175,13 @@ export default function AdminPage() {
                                     </ACard>
 
                                     <ACard title="Scoring Windows">
-                                        <Toggle label="Self-Score Open" value={!!event?.selfScoreEnabled} onChange={v => setSelfScoreEnabled(v)} />
+                                        <Toggle label="Self-Score Open" value={!!event?.selfScoreEnabled} onChange={v => {
+                                            setSelfScoreEnabled(v);
+                                            // When admin enables self-score, unlock current team so they can (re-)score
+                                            if (v && event?.currentTeamId) {
+                                                updateTeam(event.currentTeamId, { selfScoreLocked: false, selfScore: null });
+                                            }
+                                        }} />
                                         <Toggle label="Judge Scoring Open" value={!!event?.judgeScoringEnabled} onChange={v => setJudgeScoringEnabled(v)} />
                                     </ACard>
 
