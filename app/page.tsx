@@ -27,6 +27,11 @@ export default function PortalPage() {
       <div className="curtain-blur-overlay" />
       <div className="curtain-wings" />
 
+      {/* Spinning logo — top left */}
+      <div className="logo-wrap" style={{ position: "fixed", top: "16px", left: "20px", zIndex: 50 }}>
+        <Image src="/jgl-logo.png" alt="JGL" width={150} height={150} className="logo" style={{ objectFit: "contain" }} priority />
+      </div>
+
       {/* Center card */}
       <motion.div
         initial={{ opacity: 0, y: 28, scale: 0.96 }}
@@ -44,7 +49,7 @@ export default function PortalPage() {
         {/* Logo */}
         <div style={{
           width: "100%",
-          height: "180px",
+          height: "280px",
           position: "relative",
           marginBottom: "20px",
         }}>
