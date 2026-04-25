@@ -47,7 +47,7 @@ export default function PortalPage() {
         }}
       >
         {/* Logo — negative margins eat the PNG's transparent padding */}
-        <div style={{ width: "100%", marginTop: "-20%", marginBottom: "-22%", textAlign: "center" }}>
+        <div style={{ width: "100%", marginTop: "-20%", marginBottom: "-22%", textAlign: "center", pointerEvents: "none" }}>
           <Image
             src="/jgl-logo.png"
             alt="Jain's Got Latent"
