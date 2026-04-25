@@ -532,84 +532,87 @@ function ScoreReveal({ label, value, revealed, color }: {
     );
 }
 
-/* ── Roast popup — bottom-left toast ──────────────────── */
+/* ── Roast popup — auto-dismiss queue ─────────────────── */
 function RoastPopup({ roasts }: { roasts: any[] }) {
-    const [index, setIndex] = useState(0);
-    const [prev, setPrev] = useState<any>(null);
-    const [showPrev, setShowPrev] = useState(false);
-    const prevTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [visible, setVisible] = useState<any>(null);
+    const queueRef = useRef<any[]>([]);
+    const seenRef = useRef<Set<string>>(new Set());
+    const busyRef = useRef(false);
+    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const dismiss = useCallback((afterMs: number, onDone: () => void) => {
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+        // Hold for afterMs then fade out via state change
+        holdTimerRef.current = setTimeout(() => {
+            setVisible(null);           // triggers AnimatePresence exit
+            setTimeout(onDone, 700);   // wait for exit anim to finish
+        }, afterMs);
+    }, []);
+
+    const showNext = useCallback(() => {
+        if (queueRef.current.length === 0) { busyRef.current = false; return; }
+        busyRef.current = true;
+        const next = queueRef.current.shift()!;
+        setVisible(next);
+        dismiss(5000, showNext);
+    }, [dismiss]);
+
+    // Detect new roasts and enqueue them
     useEffect(() => {
-        if (roasts.length < 2) return;
-        const iv = setInterval(() => {
-            setIndex(i => {
-                const current = roasts[i];
-                setPrev(current);
-                setShowPrev(true);
-                if (prevTimerRef.current) clearTimeout(prevTimerRef.current);
-                prevTimerRef.current = setTimeout(() => setShowPrev(false), 1800);
-                return (i + 1) % roasts.length;
-            });
-        }, 5000);
-        return () => { clearInterval(iv); if (prevTimerRef.current) clearTimeout(prevTimerRef.current); };
-    }, [roasts.length]);
+        const fresh = roasts.filter(r => !seenRef.current.has(r.id));
+        fresh.forEach(r => { seenRef.current.add(r.id); queueRef.current.push(r); });
+        if (fresh.length > 0 && !busyRef.current) showNext();
+    }, [roasts, showNext]);
 
-    useEffect(() => { setIndex(0); setPrev(null); setShowPrev(false); }, [roasts.length]);
-
-    if (!roasts.length) return null;
-    const current = roasts[index];
+    // Cleanup on unmount
+    useEffect(() => () => { if (holdTimerRef.current) clearTimeout(holdTimerRef.current); }, []);
 
     return (
-        <div style={{ position: "fixed", bottom: "24px", left: "24px", zIndex: 40, maxWidth: "340px", width: "calc(100vw - 48px)" }}>
-
-            {/* Previous message — floats up and blurs out */}
-            <AnimatePresence>
-                {showPrev && prev && (
+        <div style={{ position: "fixed", bottom: "28px", left: "24px", zIndex: 40, maxWidth: "340px", width: "calc(100vw - 48px)" }}>
+            <AnimatePresence mode="wait">
+                {visible && (
                     <motion.div
-                        key={prev.id + "_ghost"}
-                        initial={{ opacity: 0.75, filter: "blur(0px)", y: 0 }}
-                        animate={{ opacity: 0, filter: "blur(5px)", y: -18 }}
-                        transition={{ duration: 1.6, ease: "easeOut" }}
+                        key={visible.id}
+                        initial={{ opacity: 0, y: 32, scale: 0.96, filter: "blur(4px)" }}
+                        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, y: -24, scale: 0.97, filter: "blur(6px)" }}
+                        transition={{ type: "spring", stiffness: 360, damping: 28 }}
                         style={{
-                            background: "rgba(10, 6, 18, 0.80)",
-                            border: "1px solid rgba(201,168,76,0.25)",
-                            borderRadius: "12px",
-                            padding: "12px 18px",
-                            marginBottom: "8px",
-                            backdropFilter: "blur(10px)",
+                            background: "rgba(10, 6, 18, 0.94)",
+                            border: "1px solid var(--gold-border)",
+                            borderRadius: "14px",
+                            padding: "14px 18px",
+                            backdropFilter: "blur(16px)",
+                            boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.08)",
                         }}
                     >
-                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.78rem" }}>{prev.teamName}</span>
-                        <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", margin: "4px 0 0", lineHeight: 1.4 }}>{prev.message}</p>
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                            <span className="badge badge-gold" style={{ fontSize: "0.55rem" }}>MESSAGE</span>
+                            <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.82rem" }}>
+                                {visible.teamName}
+                            </span>
+                        </div>
+                        {/* Message */}
+                        <p style={{ color: "var(--text-sub)", fontSize: "0.86rem", lineHeight: 1.55, margin: 0 }}>
+                            {visible.message}
+                        </p>
+                        {/* Progress bar */}
+                        <motion.div
+                            initial={{ scaleX: 1 }}
+                            animate={{ scaleX: 0 }}
+                            transition={{ duration: 5, ease: "linear" }}
+                            style={{
+                                height: "2px",
+                                background: "var(--gold)",
+                                borderRadius: "2px",
+                                transformOrigin: "left",
+                                marginTop: "12px",
+                                opacity: 0.6,
+                            }}
+                        />
                     </motion.div>
                 )}
-            </AnimatePresence>
-
-            {/* Current message — slides up from below */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={current.id}
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ type: "spring", stiffness: 340, damping: 30 }}
-                    style={{
-                        background: "rgba(10, 6, 18, 0.94)",
-                        border: "1px solid var(--gold-border)",
-                        borderRadius: "12px",
-                        padding: "14px 18px",
-                        backdropFilter: "blur(14px)",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                        <span className="badge badge-gold" style={{ fontSize: "0.55rem" }}>MESSAGE</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: "0.82rem" }}>{current.teamName}</span>
-                    </div>
-                    <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", lineHeight: 1.5, margin: 0 }}>
-                        {current.message}
-                    </p>
-                </motion.div>
             </AnimatePresence>
         </div>
     );
