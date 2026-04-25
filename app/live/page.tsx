@@ -122,9 +122,9 @@ export default function LivePage() {
             <div className="curtain-blur-overlay" />
             <div className="curtain-wings" />
 
-            {/* Spinning logo top-left — sits below the NOW PRESENTING banner */}
-            <div className="logo-wrap" style={{ position: "fixed", top: "52px", left: "20px", zIndex: 20 }}>
-                <Image src="/jgl-logo.png" alt="JGL" width={120} height={57}
+            {/* Spinning logo top-left */}
+            <div className="logo-wrap" style={{ position: "fixed", top: "16px", left: "20px", zIndex: 20 }}>
+                <Image src="/jgl-logo.png" alt="JGL" width={160} height={160}
                     className="logo" style={{ objectFit: "contain" }} priority />
             </div>
 

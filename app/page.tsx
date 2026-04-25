@@ -29,7 +29,7 @@ export default function PortalPage() {
 
       {/* Spinning logo — top left */}
       <div className="logo-wrap" style={{ position: "fixed", top: "16px", left: "20px", zIndex: 50 }}>
-        <Image src="/jgl-logo.png" alt="JGL" width={150} height={71} className="logo" style={{ objectFit: "contain" }} priority />
+        <Image src="/jgl-logo.png" alt="JGL" width={150} height={150} className="logo" style={{ objectFit: "contain" }} priority />
       </div>
 
       {/* Center card */}
@@ -46,8 +46,8 @@ export default function PortalPage() {
           borderColor: "rgba(255,255,255,0.10)",
         }}
       >
-        {/* Center logo */}
-        <div style={{ width: "100%", marginTop: "-6%", marginBottom: "-6%", paddingTop: "6px", paddingBottom: "6px", textAlign: "center", pointerEvents: "none" }}>
+        {/* Logo — negative margins eat the PNG's transparent padding */}
+        <div style={{ width: "100%", marginTop: "-20%", marginBottom: "-22%", textAlign: "center", pointerEvents: "none" }}>
           <Image
             src="/jgl-logo.png"
             alt="Jain's Got Latent"
