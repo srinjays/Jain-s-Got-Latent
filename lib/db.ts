@@ -29,6 +29,7 @@ export const registerTeam = async (teamData: any) => {
 
 export const updateTeam = (teamId: string, data: any) => update(ref(db, `teams/${teamId}`), data);
 export const setTeamEliminated = (teamId: string, val: boolean) => update(ref(db, `teams/${teamId}`), { eliminated: val });
+export const setTeamSelected = (teamId: string, val: boolean) => update(ref(db, `teams/${teamId}`), { selected: val });
 export const deleteTeam = (teamId: string) => remove(ref(db, `teams/${teamId}`));
 
 export const submitSelfScore = (teamId: string, score: number) =>

@@ -243,6 +243,7 @@ export default function LivePage() {
                                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                         {leaderboard.slice(0, 10).map((team: any, i: number) => {
                                             const isCurrent = team.id === event?.currentTeamId;
+                                            const isSelected = !!team.selected;
                                             const top3 = i < 3 && !team.eliminated;
                                             return (
                                                 <motion.div
@@ -258,6 +259,7 @@ export default function LivePage() {
                                                         alignItems: "center",
                                                         padding: top3 ? "14px 18px" : "10px 18px",
                                                         gap: "14px",
+                                                        background: isSelected && !isCurrent && !team.eliminated ? "rgba(139,92,246,0.08)" : undefined,
                                                     }}
                                                 >
                                                     <span style={{
@@ -287,6 +289,9 @@ export default function LivePage() {
                                                         )}
                                                         {isCurrent && !team.eliminated && (
                                                             <span className="badge badge-gold" style={{ fontSize: "0.55rem", marginTop: "3px" }}>ON STAGE</span>
+                                                        )}
+                                                        {isSelected && !isCurrent && !team.eliminated && (
+                                                            <span className="badge badge-purple" style={{ fontSize: "0.55rem", marginTop: "3px" }}>SELECTED</span>
                                                         )}
                                                     </div>
 

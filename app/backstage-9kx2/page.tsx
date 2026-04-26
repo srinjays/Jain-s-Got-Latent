@@ -11,7 +11,7 @@ import {
     triggerMeme, clearMeme,
     approveRoast, rejectRoast,
     addJudge, removeJudge,
-    uploadMemeFile, setTeamEliminated, deleteTeam, updateTeam,
+    uploadMemeFile, setTeamEliminated, setTeamSelected, deleteTeam, updateTeam,
 } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import { ref, push, remove, set } from "firebase/database";
@@ -490,7 +490,7 @@ export default function AdminPage() {
                                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                             <thead>
                                                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                                                    {["#", "Team", "Judge Marks", "Judges In", "Status", "Action"].map(h => (
+                                                    {["#", "Team", "Judge Marks", "Judges In", "Status", "Actions"].map(h => (
                                                         <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: "var(--text-sub)", fontSize: "0.73rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
                                                     ))}
                                                 </tr>
@@ -498,11 +498,12 @@ export default function AdminPage() {
                                             <tbody>
                                                 {leaderboard.map((team: any, i: number) => {
                                                     const isCurrent = event?.currentTeamId === team.id;
+                                                    const isSelected = !!team.selected;
                                                     return (
                                                         <tr key={team.id} style={{
                                                             borderBottom: "1px solid var(--border)",
                                                             opacity: team.eliminated ? 0.45 : 1,
-                                                            background: isCurrent ? "rgba(201,168,76,0.07)" : undefined,
+                                                            background: isCurrent ? "rgba(201,168,76,0.07)" : isSelected ? "rgba(139,92,246,0.07)" : undefined,
                                                             transition: "opacity 0.3s",
                                                         }}>
                                                             <td style={{ padding: "12px", color: "var(--text-dim)", fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>
@@ -516,6 +517,7 @@ export default function AdminPage() {
                                                                         textDecoration: team.eliminated ? "line-through" : "none",
                                                                     }}>{team.teamName}</span>
                                                                     {isCurrent && <span className="badge badge-gold" style={{ fontSize: "0.58rem" }}>ON STAGE</span>}
+                                                                    {isSelected && !isCurrent && <span className="badge badge-purple" style={{ fontSize: "0.58rem" }}>SELECTED</span>}
                                                                 </div>
                                                             </td>
                                                             <td style={{ padding: "12px", fontFamily: "var(--font-display)", fontSize: "1.2rem", color: team.eliminated ? "var(--text-dim)" : "var(--gold-light)", fontWeight: 700 }}>
@@ -529,16 +531,28 @@ export default function AdminPage() {
                                                                     ? <span className="badge badge-red" style={{ fontSize: "0.65rem" }}>❌ Eliminated</span>
                                                                     : isCurrent
                                                                         ? <span className="badge badge-gold" style={{ fontSize: "0.65rem" }}>🎤 On Stage</span>
-                                                                        : <span className="badge badge-green" style={{ fontSize: "0.65rem" }}>✓ Active</span>
+                                                                        : isSelected
+                                                                            ? <span className="badge badge-purple" style={{ fontSize: "0.65rem" }}>✔ Selected</span>
+                                                                            : <span className="badge badge-green" style={{ fontSize: "0.65rem" }}>✓ Active</span>
                                                                 }
                                                             </td>
                                                             <td style={{ padding: "12px" }}>
-                                                                <button
-                                                                    onClick={() => setTeamEliminated(team.id, !team.eliminated)}
-                                                                    className={team.eliminated ? "btn-gold" : "btn-danger"}
-                                                                    style={{ fontSize: "0.7rem", padding: "5px 12px" }}>
-                                                                    {team.eliminated ? "↩ Restore" : "✕ Eliminate"}
-                                                                </button>
+                                                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                                                    <button
+                                                                        onClick={() => setTeamEliminated(team.id, !team.eliminated)}
+                                                                        className={team.eliminated ? "btn-gold" : "btn-danger"}
+                                                                        style={{ fontSize: "0.7rem", padding: "5px 12px" }}>
+                                                                        {team.eliminated ? "↩ Restore" : "✕ Eliminate"}
+                                                                    </button>
+                                                                    {!team.eliminated && (
+                                                                        <button
+                                                                            onClick={() => setTeamSelected(team.id, !isSelected)}
+                                                                            className={isSelected ? "btn" : "btn-gold"}
+                                                                            style={{ fontSize: "0.7rem", padding: "5px 12px" }}>
+                                                                            {isSelected ? "Deselect" : "✔ Select"}
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );
