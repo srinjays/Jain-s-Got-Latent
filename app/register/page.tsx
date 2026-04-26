@@ -7,7 +7,9 @@ import { registerTeam } from "@/lib/db";
 
 const BRANCHES = ["CSE", "ISE", "ECE", "EEE", "ME", "CV", "AIML", "DS", "CY"];
 const YEARS = ["1st", "2nd", "3rd", "4th"];
-const empty = () => ({ name: "", usn: "", branch: "CSE", year: "2nd", funFact: "" });
+const USN_RE = /^[0-9]{2}[A-Z]{2}[0-9]{2}[A-Z]{2,3}[0-9]{3}$/i;
+
+const empty = () => ({ name: "", usn: "", branch: "CSE", year: "2nd", funFacts: ["", "", ""] });
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -23,6 +25,13 @@ export default function RegisterPage() {
     const upd = (i: number, f: string, v: string) => {
         const m = [...members]; m[i] = { ...m[i], [f]: v }; setMembers(m);
     };
+    const updFact = (i: number, fi: number, v: string) => {
+        const m = [...members];
+        const facts = [...m[i].funFacts];
+        facts[fi] = v;
+        m[i] = { ...m[i], funFacts: facts };
+        setMembers(m);
+    };
     const changeCount = (n: number) => {
         setCount(n);
         setMembers(n > members.length
@@ -33,9 +42,17 @@ export default function RegisterPage() {
     const validate = () => {
         if (!teamName.trim()) return "Team name is required";
         if (!projectIdea.trim()) return "Project idea is required";
+        if (!teamDesc.trim()) return "Team tagline is required";
         for (let i = 0; i < members.length; i++) {
-            if (!members[i].name.trim()) return `Member ${i + 1} name is required`;
-            if (!members[i].usn.trim()) return `Member ${i + 1} USN is required`;
+            const m = members[i];
+            if (!m.name.trim()) return `Member ${i + 1}: Full name is required`;
+            if (!m.usn.trim()) return `Member ${i + 1}: USN is required`;
+            if (!USN_RE.test(m.usn.trim())) return `Member ${i + 1}: USN format invalid (e.g. 01FE21CS001)`;
+            if (!m.branch) return `Member ${i + 1}: Branch is required`;
+            if (!m.year) return `Member ${i + 1}: Year is required`;
+            for (let fi = 0; fi < 3; fi++) {
+                if (!m.funFacts[fi].trim()) return `Member ${i + 1}: Fun fact ${fi + 1} is required`;
+            }
         }
         return "";
     };
@@ -44,7 +61,7 @@ export default function RegisterPage() {
         const err = validate(); if (err) { setError(err); return; }
         setLoading(true); setError("");
         try {
-            const r = await registerTeam({ teamName: teamName.trim(), projectIdea, teamDescription: teamDesc, members });
+            const r = await registerTeam({ teamName: teamName.trim(), projectIdea: projectIdea.trim(), teamDescription: teamDesc.trim(), members });
             setDone({ pin: r.pin, name: teamName.trim() });
         } catch { setError("Registration failed. Check your connection."); }
         finally { setLoading(false); }
@@ -94,7 +111,7 @@ export default function RegisterPage() {
                         <textarea className="input" value={projectIdea} onChange={e => setProjectIdea(e.target.value)}
                             placeholder="Describe your brilliantly questionable idea…" rows={3} />
                     </Field>
-                    <Field label="Team Tagline (optional)">
+                    <Field label="Team Tagline *">
                         <input className="input" value={teamDesc} onChange={e => setTeamDesc(e.target.value)} placeholder="We peaked in high school" />
                     </Field>
 
@@ -119,12 +136,40 @@ export default function RegisterPage() {
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                                 <Field label="Full Name *"><input className="input" value={m.name} onChange={e => upd(i, "name", e.target.value)} placeholder="Your name" /></Field>
                                 <Field label="USN *"><input className="input" value={m.usn} onChange={e => upd(i, "usn", e.target.value.toUpperCase())} placeholder="01FE21CS001" /></Field>
-                                <Field label="Branch"><select className="input" value={m.branch} onChange={e => upd(i, "branch", e.target.value)}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</select></Field>
-                                <Field label="Year"><select className="input" value={m.year} onChange={e => upd(i, "year", e.target.value)}>{YEARS.map(y => <option key={y}>{y}</option>)}</select></Field>
+                                <Field label="Branch *">
+                                    <select className="input" value={m.branch} onChange={e => upd(i, "branch", e.target.value)}>
+                                        <option value="">— Select —</option>
+                                        {BRANCHES.map(b => <option key={b}>{b}</option>)}
+                                    </select>
+                                </Field>
+                                <Field label="Year *">
+                                    <select className="input" value={m.year} onChange={e => upd(i, "year", e.target.value)}>
+                                        <option value="">— Select —</option>
+                                        {YEARS.map(y => <option key={y}>{y}</option>)}
+                                    </select>
+                                </Field>
                             </div>
-                            <Field label="Fun Fact" style={{ marginTop: "10px" }}>
-                                <input className="input" value={m.funFact} onChange={e => upd(i, "funFact", e.target.value)} placeholder="Has never debugged without cursing" />
-                            </Field>
+
+                            {/* 3 Fun Facts */}
+                            <div style={{ marginTop: "12px" }}>
+                                <span className="label-cap" style={{ color: "var(--gold)", marginBottom: "6px", display: "block" }}>
+                                    Fun Facts * <span style={{ color: "var(--text-dim)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— provide 3 fun facts about yourself</span>
+                                </span>
+                                {[0, 1, 2].map(fi => (
+                                    <input
+                                        key={fi}
+                                        className="input"
+                                        value={m.funFacts[fi]}
+                                        onChange={e => updFact(i, fi, e.target.value)}
+                                        placeholder={[
+                                            "e.g. Has never debugged without cursing",
+                                            "e.g. Can recite Pi to 20 digits",
+                                            "e.g. Survived 3 all-nighters in a row",
+                                        ][fi]}
+                                        style={{ marginBottom: fi < 2 ? "8px" : 0 }}
+                                    />
+                                ))}
+                            </div>
                         </motion.div>
                     ))}
 
@@ -155,3 +200,4 @@ function Field({ label, children, style = {} }: { label: string; children: React
         <span className="label-cap">{label}</span>{children}
     </div>;
 }
+

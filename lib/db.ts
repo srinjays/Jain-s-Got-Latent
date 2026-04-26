@@ -85,8 +85,9 @@ export const initEventDefaults = async () => {
         });
     }
     // Memes are now uploaded by admin — no placeholders seeded
+    // Settings — do NOT seed adminPin into Firebase (that would expose it publicly)
     const settingsSnap = await get(ref(db, "settings"));
     if (!settingsSnap.exists()) {
-        await set(ref(db, "settings"), { adminPin: "420691", judgeCount: 3 });
+        await set(ref(db, "settings"), { judgeCount: 3 });
     }
 };
