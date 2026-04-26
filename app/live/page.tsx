@@ -285,6 +285,9 @@ export default function LivePage() {
                                                         {team.eliminated && (
                                                             <span className="badge badge-red" style={{ fontSize: "0.55rem", marginTop: "3px" }}>eliminated</span>
                                                         )}
+                                                        {isCurrent && !team.eliminated && (
+                                                            <span className="badge badge-gold" style={{ fontSize: "0.55rem", marginTop: "3px" }}>ON STAGE</span>
+                                                        )}
                                                     </div>
 
                                                     <div style={{ textAlign: "right", flexShrink: 0 }}>

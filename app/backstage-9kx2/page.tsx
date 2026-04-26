@@ -527,7 +527,9 @@ export default function AdminPage() {
                                                             <td style={{ padding: "12px" }}>
                                                                 {team.eliminated
                                                                     ? <span className="badge badge-red" style={{ fontSize: "0.65rem" }}>❌ Eliminated</span>
-                                                                    : <span className="badge badge-green" style={{ fontSize: "0.65rem" }}>✓ Active</span>
+                                                                    : isCurrent
+                                                                        ? <span className="badge badge-gold" style={{ fontSize: "0.65rem" }}>🎤 On Stage</span>
+                                                                        : <span className="badge badge-green" style={{ fontSize: "0.65rem" }}>✓ Active</span>
                                                                 }
                                                             </td>
                                                             <td style={{ padding: "12px" }}>
