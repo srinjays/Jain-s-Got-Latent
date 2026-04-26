@@ -298,7 +298,7 @@ export default function LivePage() {
                                                         </span>
                                                         {top3 && team.judgeAvg != null && (
                                                             <span style={{ fontSize: "0.58rem", color: "var(--text-dim)", marginLeft: "3px", fontWeight: 700, letterSpacing: "0.08em" }}>
-                                                                MRK {i === 0 && "⭐"}
+                                                                MRK
                                                             </span>
                                                         )}
                                                     </div>
