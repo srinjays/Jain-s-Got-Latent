@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import PageShell from "@/components/ui/PageShell";
-import { useTeams, useEvent, useJudges, useMemes, useRoasts, useLeaderboard } from "@/hooks/useRealtime";
+import { useTeams, useEvent, useJudges, useMemes, useRoasts, useLeaderboard, useBattle, useBattleAudienceVotes, useBattleJudgeVotes } from "@/hooks/useRealtime";
 import {
     setCurrentTeam, startTimer, resetTimer,
     setSelfScoreEnabled, setJudgeScoringEnabled,
@@ -13,12 +13,15 @@ import {
     addJudge, removeJudge,
     uploadMemeFile, setTeamEliminated, setTeamSelected, deleteTeam, updateTeam,
     setLeaderboardVisible,
+    startBattle, endBattle, resetBattleVotes,
+    setBattleTurn, startBattleTimer, resetBattleTimer,
+    setBattleAudienceVoteOpen, setBattleResultVisible, setBattleJudgeVotesVisible, setBattleRound,
 } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import { ref, push, remove, set } from "firebase/database";
 
 const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN || "420691";
-const TAB_NAMES = ["Control", "Teams", "Memes", "Roasts", "Judges", "Leaderboard"];
+const TAB_NAMES = ["Control", "Teams", "Memes", "Roasts", "Judges", "Leaderboard", "Battle"];
 
 export default function AdminPage() {
     const router = useRouter();
@@ -41,6 +44,11 @@ export default function AdminPage() {
     const fileRef = useRef<HTMLInputElement>(null);
     const adminAudioRef = useRef<HTMLAudioElement | null>(null);
 
+    const [battleTeamA, setBattleTeamA] = useState("");
+    const [battleTeamB, setBattleTeamB] = useState("");
+    const [battleDuration, setBattleDuration] = useState(60);
+    const [battleRoundInput, setBattleRoundInput] = useState(1);
+
     const teams = useTeams();
     const event = useEvent();
     const judges = useJudges();
@@ -48,6 +56,20 @@ export default function AdminPage() {
     const pending = useRoasts("pending");
     const approved = useRoasts("approved");
     const leaderboard = useLeaderboard();
+    const battle = useBattle();
+    const audienceVotes = useBattleAudienceVotes();
+    const judgeVotes = useBattleJudgeVotes();
+
+    // Derived battle stats
+    const avEntries = Object.values(audienceVotes ?? {});
+    const avA = avEntries.filter(v => v === "A").length;
+    const avB = avEntries.filter(v => v === "B").length;
+    const avTotal = avA + avB;
+    const jvEntries = Object.values(judgeVotes ?? {});
+    const jvA = jvEntries.filter(v => v === "A").length;
+    const jvB = jvEntries.filter(v => v === "B").length;
+    const teamA = teams.find((t: any) => t.id === battle?.teamAId);
+    const teamB = teams.find((t: any) => t.id === battle?.teamBId);
 
     const login = () => {
         if (pinInput.trim() === ADMIN_PIN) setAuthed(true);
@@ -584,6 +606,150 @@ export default function AdminPage() {
                                 </ACard>
                             )}
 
+                            {/* ── BATTLE ───────────────────────────────── */}
+                            {tab === 6 && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                                    {/* Matchmaking */}
+                                    <ACard title="Matchmaking">
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                                            <div>
+                                                <span className="label-cap">Team A</span>
+                                                <select className="input" value={battleTeamA} onChange={e => setBattleTeamA(e.target.value)}>
+                                                    <option value="">-- Select --</option>
+                                                    {teams.filter((t: any) => t.id !== battleTeamB).map((t: any) => (
+                                                        <option key={t.id} value={t.id}>{t.teamName}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <span className="label-cap">Team B</span>
+                                                <select className="input" value={battleTeamB} onChange={e => setBattleTeamB(e.target.value)}>
+                                                    <option value="">-- Select --</option>
+                                                    {teams.filter((t: any) => t.id !== battleTeamA).map((t: any) => (
+                                                        <option key={t.id} value={t.id}>{t.teamName}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
+                                            <span className="label-cap" style={{ margin: 0, whiteSpace: "nowrap" }}>Turn Duration (s)</span>
+                                            <input type="number" className="input" value={battleDuration} onChange={e => setBattleDuration(Number(e.target.value))} min={10} max={300} style={{ width: "80px" }} />
+                                            <span className="label-cap" style={{ margin: 0, whiteSpace: "nowrap" }}>Round</span>
+                                            <input type="number" className="input" value={battleRoundInput} onChange={e => setBattleRoundInput(Number(e.target.value))} min={1} max={20} style={{ width: "60px" }} />
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <button
+                                                className="btn-gold"
+                                                style={{ flex: 1 }}
+                                                disabled={!battleTeamA || !battleTeamB || battleTeamA === battleTeamB}
+                                                onClick={async () => {
+                                                    if (!confirm(`Start Battle: ${teams.find((t: any) => t.id === battleTeamA)?.teamName} vs ${teams.find((t: any) => t.id === battleTeamB)?.teamName}?`)) return;
+                                                    await resetBattleVotes();
+                                                    startBattle(battleTeamA, battleTeamB, battleDuration, battleRoundInput);
+                                                }}
+                                            >
+                                                Start Battle
+                                            </button>
+                                            {battle?.active && (
+                                                <button className="btn-danger" style={{ flex: 1 }} onClick={() => { if (confirm("End this battle?")) endBattle(); }}>
+                                                    End Battle
+                                                </button>
+                                            )}
+                                        </div>
+                                        {battle?.active && teamA && teamB && (
+                                            <div style={{ marginTop: "12px", padding: "12px", borderRadius: "8px", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-border)", textAlign: "center" }}>
+                                                <span style={{ fontFamily: "var(--font-display)", fontSize: "1rem", color: "var(--gold-light)", letterSpacing: "0.06em" }}>
+                                                    {teamA.teamName}  vs  {teamB.teamName}
+                                                </span>
+                                                <div style={{ color: "var(--text-dim)", fontSize: "0.72rem", marginTop: "4px" }}>Round {battle.roundNumber}</div>
+                                            </div>
+                                        )}
+                                    </ACard>
+
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                        {/* Turn + Timer */}
+                                        <ACard title="Turn Control">
+                                            <div style={{ marginBottom: "14px" }}>
+                                                <span className="label-cap">Current Turn</span>
+                                                <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                                                    <button
+                                                        className={battle?.currentTurn === "A" ? "btn-gold" : "btn"}
+                                                        style={{ flex: 1, fontWeight: 700 }}
+                                                        onClick={() => setBattleTurn("A")}
+                                                        disabled={!battle?.active}
+                                                    >
+                                                        {teamA?.teamName ?? "Team A"}
+                                                    </button>
+                                                    <button
+                                                        className={battle?.currentTurn === "B" ? "btn-purple" : "btn"}
+                                                        style={{ flex: 1, fontWeight: 700 }}
+                                                        onClick={() => setBattleTurn("B")}
+                                                        disabled={!battle?.active}
+                                                    >
+                                                        {teamB?.teamName ?? "Team B"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <span className="label-cap">Turn Timer</span>
+                                            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                                                <button className="btn-gold" style={{ flex: 1 }} onClick={() => startBattleTimer(battleDuration)} disabled={!battle?.active}>Start</button>
+                                                <button className="btn-danger" style={{ flex: 1 }} onClick={resetBattleTimer} disabled={!battle?.active}>Reset</button>
+                                            </div>
+                                            <div style={{ marginTop: "10px", textAlign: "center", fontFamily: "var(--font-display)", fontSize: "1.4rem", color: battle?.timerRunning ? "var(--gold-light)" : "var(--text-dim)" }}>
+                                                {battle?.timerRunning ? "RUNNING" : "STOPPED"}
+                                            </div>
+                                        </ACard>
+
+                                        {/* Visibility Toggles */}
+                                        <ACard title="Visibility">
+                                            <Toggle label="Audience Vote Open" value={!!battle?.audienceVoteOpen} onChange={v => setBattleAudienceVoteOpen(v)} />
+                                            <Toggle label="Show Judge Votes" value={!!battle?.judgeVotesVisible} onChange={v => setBattleJudgeVotesVisible(v)} />
+                                            <Toggle label="Reveal Winner" value={!!battle?.resultVisible} onChange={v => setBattleResultVisible(v)} />
+                                        </ACard>
+                                    </div>
+
+                                    {/* Live Tallies */}
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                        <ACard title={`Audience Votes (${avTotal})`}>
+                                            <div style={{ marginBottom: "10px" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                                                    <span style={{ color: "var(--gold-light)", fontWeight: 700, fontSize: "0.85rem" }}>{teamA?.teamName ?? "Team A"} — {avA}</span>
+                                                    <span style={{ color: "#A78BFA", fontWeight: 700, fontSize: "0.85rem" }}>{avB} — {teamB?.teamName ?? "Team B"}</span>
+                                                </div>
+                                                <div style={{ height: "10px", borderRadius: "6px", overflow: "hidden", background: "rgba(255,255,255,0.06)", display: "flex" }}>
+                                                    <div style={{ width: `${avTotal ? (avA / avTotal) * 100 : 50}%`, background: "var(--gold)", transition: "width 0.5s ease" }} />
+                                                    <div style={{ flex: 1, background: "#7C3AED", transition: "width 0.5s ease" }} />
+                                                </div>
+                                                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+                                                    <span style={{ color: "var(--text-dim)", fontSize: "0.68rem" }}>{avTotal ? Math.round((avA / avTotal) * 100) : 50}%</span>
+                                                    <span style={{ color: "var(--text-dim)", fontSize: "0.68rem" }}>{avTotal ? Math.round((avB / avTotal) * 100) : 50}%</span>
+                                                </div>
+                                            </div>
+                                        </ACard>
+                                        <ACard title={`Judge Votes (${jvA + jvB} / ${judges.length})`}>
+                                            <div style={{ display: "flex", gap: "10px", alignItems: "stretch" }}>
+                                                <div style={{ flex: 1, textAlign: "center", padding: "16px", borderRadius: "8px", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-border)" }}>
+                                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--gold-light)" }}>{jvA}</div>
+                                                    <div style={{ color: "var(--text-dim)", fontSize: "0.7rem", marginTop: "4px" }}>{teamA?.teamName ?? "Team A"}</div>
+                                                </div>
+                                                <div style={{ flex: 1, textAlign: "center", padding: "16px", borderRadius: "8px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "#A78BFA" }}>{jvB}</div>
+                                                    <div style={{ color: "var(--text-dim)", fontSize: "0.7rem", marginTop: "4px" }}>{teamB?.teamName ?? "Team B"}</div>
+                                                </div>
+                                            </div>
+                                            {(jvA > 0 || jvB > 0) && (
+                                                <div style={{ marginTop: "12px", padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.04)", textAlign: "center" }}>
+                                                    <span style={{ color: jvA > jvB ? "var(--gold-light)" : jvB > jvA ? "#A78BFA" : "var(--text-sub)", fontWeight: 700, fontSize: "0.82rem" }}>
+                                                        {jvA > jvB ? `${teamA?.teamName ?? "Team A"} leads` : jvB > jvA ? `${teamB?.teamName ?? "Team B"} leads` : "Tied"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </ACard>
+                                    </div>
+
+                                </div>
+                            )}
 
                         </motion.div>
                     </AnimatePresence>

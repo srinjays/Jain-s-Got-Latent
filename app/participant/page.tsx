@@ -3,8 +3,8 @@ import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import PageShell from "@/components/ui/PageShell";
-import { useTeams, useEvent, useLeaderboard } from "@/hooks/useRealtime";
-import { submitSelfScore, submitRoast } from "@/lib/db";
+import { useTeams, useEvent, useLeaderboard, useBattle, useBattleAudienceVotes, useBattleJudgeVotes } from "@/hooks/useRealtime";
+import { submitSelfScore, submitRoast, castAudienceVote } from "@/lib/db";
 
 function ParticipantContent() {
     const router = useRouter();
@@ -22,6 +22,19 @@ function ParticipantContent() {
     const teams = useTeams();
     const event = useEvent();
     const leaderboard = useLeaderboard();
+    const battle = useBattle();
+    const battleAudienceVotes = useBattleAudienceVotes();
+    const battleJudgeVotes = useBattleJudgeVotes();
+
+    const battleTeamA = teams.find((t: any) => t.id === battle?.teamAId);
+    const battleTeamB = teams.find((t: any) => t.id === battle?.teamBId);
+    const bAvEntries = Object.values(battleAudienceVotes ?? {});
+    const bAvA = bAvEntries.filter(v => v === "A").length;
+    const bAvB = bAvEntries.filter(v => v === "B").length;
+    const bAvTotal = bAvA + bAvB;
+    const bJvEntries = Object.values(battleJudgeVotes ?? {});
+    const bJvA = bJvEntries.filter(v => v === "A").length;
+    const bJvB = bJvEntries.filter(v => v === "B").length;
 
     const handleLogin = () => {
         const found = teams.find((t: any) => t.pin === pinInput.trim());
@@ -34,6 +47,7 @@ function ParticipantContent() {
     };
 
     const currentTeam = team ? teams.find((t: any) => t.id === team.id) || team : teams.find((t: any) => t.pin === pinInput.trim());
+    const myBattleVote = currentTeam ? (battleAudienceVotes as any)?.[currentTeam.id] : null;
     const selfEnabled = event?.selfScoreEnabled;
     // Always read lock from Firebase — never use local state for this
     const isLocked = !!currentTeam?.selfScoreLocked;
@@ -244,6 +258,123 @@ function ParticipantContent() {
                                         <p style={{ color: "var(--text-dim)", fontSize: "0.85rem", textAlign: "center", padding: "12px 0" }}>No scores yet.</p>
                                     )}
                                 </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Battle Section */}
+                    <AnimatePresence>
+                        {battle?.active && battleTeamA && battleTeamB && (
+                            <motion.div
+                                key="battle-section"
+                                className="card"
+                                style={{ padding: "22px" }}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ delay: 0.05 }}
+                            >
+                                <span className="label-cap" style={{ color: "var(--gold)" }}>Roast Battle</span>
+                                <div style={{ fontFamily: "var(--font-ui)", fontSize: "0.68rem", color: "var(--text-dim)", marginBottom: "14px", letterSpacing: "0.1em" }}>
+                                    ROUND {battle.roundNumber}
+                                </div>
+
+                                {/* VS display */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                                    <div style={{
+                                        flex: 1, textAlign: "center",
+                                        padding: "10px", borderRadius: "8px",
+                                        background: battle.currentTurn === "A" ? "rgba(201,168,76,0.10)" : "rgba(255,255,255,0.03)",
+                                        border: `1px solid ${battle.currentTurn === "A" ? "var(--gold-border)" : "transparent"}`,
+                                        transition: "all 0.3s",
+                                    }}>
+                                        <div style={{ fontWeight: 700, fontSize: "0.82rem", color: battle.currentTurn === "A" ? "var(--gold-light)" : "var(--text-sub)" }}>{battleTeamA.teamName}</div>
+                                        {battle.currentTurn === "A" && <div style={{ fontSize: "0.6rem", color: "var(--gold)", letterSpacing: "0.1em", marginTop: "2px" }}>ROASTING</div>}
+                                    </div>
+                                    <span style={{ color: "var(--text-dim)", fontSize: "0.75rem", fontFamily: "var(--font-display)", flexShrink: 0 }}>vs</span>
+                                    <div style={{
+                                        flex: 1, textAlign: "center",
+                                        padding: "10px", borderRadius: "8px",
+                                        background: battle.currentTurn === "B" ? "rgba(124,58,237,0.10)" : "rgba(255,255,255,0.03)",
+                                        border: `1px solid ${battle.currentTurn === "B" ? "rgba(124,58,237,0.4)" : "transparent"}`,
+                                        transition: "all 0.3s",
+                                    }}>
+                                        <div style={{ fontWeight: 700, fontSize: "0.82rem", color: battle.currentTurn === "B" ? "#A78BFA" : "var(--text-sub)" }}>{battleTeamB.teamName}</div>
+                                        {battle.currentTurn === "B" && <div style={{ fontSize: "0.6rem", color: "#A78BFA", letterSpacing: "0.1em", marginTop: "2px" }}>ROASTING</div>}
+                                    </div>
+                                </div>
+
+                                {/* Audience vote */}
+                                {battle.audienceVoteOpen && currentTeam && (
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", letterSpacing: "0.1em", marginBottom: "8px" }}>YOUR VOTE</div>
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <button
+                                                onClick={() => castAudienceVote(currentTeam.id, "A")}
+                                                style={{
+                                                    flex: 1, padding: "10px", borderRadius: "8px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", border: "none",
+                                                    background: myBattleVote === "A" ? "var(--gold)" : "rgba(201,168,76,0.12)",
+                                                    color: myBattleVote === "A" ? "#1a0f00" : "var(--gold-light)",
+                                                    transition: "all 0.2s",
+                                                }}
+                                            >{battleTeamA.teamName}</button>
+                                            <button
+                                                onClick={() => castAudienceVote(currentTeam.id, "B")}
+                                                style={{
+                                                    flex: 1, padding: "10px", borderRadius: "8px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", border: "none",
+                                                    background: myBattleVote === "B" ? "#7C3AED" : "rgba(124,58,237,0.12)",
+                                                    color: myBattleVote === "B" ? "#fff" : "#A78BFA",
+                                                    transition: "all 0.2s",
+                                                }}
+                                            >{battleTeamB.teamName}</button>
+                                        </div>
+                                        {myBattleVote && (
+                                            <p style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "6px", textAlign: "center" }}>
+                                                You voted for {myBattleVote === "A" ? battleTeamA.teamName : battleTeamB.teamName} — you can change it
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Momentum bar */}
+                                {(bAvTotal > 0 || myBattleVote) && (
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                                            <span style={{ fontSize: "0.65rem", color: "var(--gold-light)", fontWeight: 700 }}>{bAvTotal ? `${Math.round((bAvA / bAvTotal) * 100)}%` : "50%"}</span>
+                                            <span style={{ fontSize: "0.63rem", color: "var(--text-dim)", letterSpacing: "0.08em" }}>AUDIENCE MOMENTUM</span>
+                                            <span style={{ fontSize: "0.65rem", color: "#A78BFA", fontWeight: 700 }}>{bAvTotal ? `${Math.round((bAvB / bAvTotal) * 100)}%` : "50%"}</span>
+                                        </div>
+                                        <div style={{ height: "8px", borderRadius: "6px", overflow: "hidden", display: "flex", background: "rgba(255,255,255,0.05)" }}>
+                                            <div style={{ width: `${bAvTotal ? (bAvA / bAvTotal) * 100 : 50}%`, background: "linear-gradient(90deg, #C9A84C, #F59E0B)", transition: "width 0.5s ease" }} />
+                                            <div style={{ flex: 1, background: "linear-gradient(90deg, #6D28D9, #7C3AED)" }} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Judge votes (visible when admin allows) */}
+                                {battle.judgeVotesVisible && (
+                                    <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+                                        <div style={{ flex: 1, textAlign: "center", padding: "10px", borderRadius: "8px", background: "rgba(201,168,76,0.06)", border: "1px solid var(--gold-border)" }}>
+                                            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "var(--gold-light)" }}>{bJvA}</div>
+                                            <div style={{ fontSize: "0.6rem", color: "var(--text-dim)", letterSpacing: "0.08em" }}>JUDGE VOTES</div>
+                                        </div>
+                                        <div style={{ flex: 1, textAlign: "center", padding: "10px", borderRadius: "8px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                                            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#A78BFA" }}>{bJvB}</div>
+                                            <div style={{ fontSize: "0.6rem", color: "var(--text-dim)", letterSpacing: "0.08em" }}>JUDGE VOTES</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Winner reveal */}
+                                {battle.resultVisible && (
+                                    <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-border)", textAlign: "center" }}>
+                                        <div style={{ fontSize: "0.62rem", color: "var(--text-dim)", letterSpacing: "0.14em", marginBottom: "4px" }}>WINNER ADVANCES</div>
+                                        <div style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", color: "var(--gold-light)" }}>
+                                            {bJvA >= bJvB ? battleTeamA.teamName : battleTeamB.teamName}
+                                        </div>
+                                    </div>
+                                )}
+
                             </motion.div>
                         )}
                     </AnimatePresence>

@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import {
     useTeams, useEvent, useLeaderboard,
     useActiveMeme, useMemes, useRoasts, useTimer,
+    useBattle, useBattleAudienceVotes, useBattleJudgeVotes, useBattleTimer,
 } from "@/hooks/useRealtime";
 import { clearMeme } from "@/lib/db";
 
@@ -51,6 +52,26 @@ export default function LivePage() {
     const memes = useMemes();
     const roasts = useRoasts("approved");
     const { remaining, total, running } = useTimer();
+    const battle = useBattle();
+    const battleAudienceVotes = useBattleAudienceVotes();
+    const battleJudgeVotes = useBattleJudgeVotes();
+    const { remaining: bRemaining, total: bTotal, running: bRunning } = useBattleTimer();
+
+    const battleTeamA = teams.find((t: any) => t.id === battle?.teamAId);
+    const battleTeamB = teams.find((t: any) => t.id === battle?.teamBId);
+    const bAvEntries = Object.values(battleAudienceVotes ?? {});
+    const bAvA = bAvEntries.filter(v => v === "A").length;
+    const bAvB = bAvEntries.filter(v => v === "B").length;
+    const bAvTotal = bAvA + bAvB;
+    const bJvEntries = Object.values(battleJudgeVotes ?? {});
+    const bJvA = bJvEntries.filter(v => v === "A").length;
+    const bJvB = bJvEntries.filter(v => v === "B").length;
+    // Battle timer geometry
+    const bPct = bTotal > 0 ? bRemaining / bTotal : 1;
+    const bR = 90;
+    const bCirc = 2 * Math.PI * bR;
+    const bDash = bCirc * (1 - bPct);
+    const bTColor = bPct > 0.5 ? "var(--gold-light)" : bPct > 0.25 ? "#FACC15" : "#F87171";
 
     const currentTeam = teams.find((t: any) => t.id === event?.currentTeamId);
     const selfRevealed = event?.selfScoreRevealed;
@@ -151,6 +172,164 @@ export default function LivePage() {
                         <span style={{ color: "var(--text-sub)", fontSize: "0.8rem" }}>
                             {currentTeam.projectIdea}
                         </span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── BATTLE OVERLAY ──────────────────────────── */}
+            <AnimatePresence>
+                {battle?.active && battleTeamA && battleTeamB && (
+                    <motion.div
+                        key="battle-overlay"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{
+                            position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 50,
+                            background: "rgba(8, 4, 18, 0.97)",
+                            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                            padding: "24px",
+                            backdropFilter: "blur(12px)",
+                        }}
+                    >
+                        {/* Round badge */}
+                        <div style={{ fontFamily: "var(--font-ui)", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.2em", color: "var(--gold)", marginBottom: "18px", textTransform: "uppercase" }}>
+                            ROAST BATTLE  &mdash;  ROUND {battle.roundNumber}
+                        </div>
+
+                        {/* VS Header */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "28px", marginBottom: "28px", width: "100%", maxWidth: "640px", justifyContent: "center" }}>
+                            <div style={{
+                                flex: 1, textAlign: "right",
+                                fontFamily: "var(--font-display)", fontSize: "1.5rem",
+                                color: battle.currentTurn === "A" ? "var(--gold-light)" : "var(--text-dim)",
+                                letterSpacing: "0.05em",
+                                transition: "color 0.4s",
+                            }}>
+                                {battleTeamA.teamName}
+                            </div>
+                            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "var(--text-dim)", letterSpacing: "0.12em", flexShrink: 0 }}>VS</div>
+                            <div style={{
+                                flex: 1, textAlign: "left",
+                                fontFamily: "var(--font-display)", fontSize: "1.5rem",
+                                color: battle.currentTurn === "B" ? "#A78BFA" : "var(--text-dim)",
+                                letterSpacing: "0.05em",
+                                transition: "color 0.4s",
+                            }}>
+                                {battleTeamB.teamName}
+                            </div>
+                        </div>
+
+                        {/* Turn indicator */}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={battle.currentTurn}
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                                style={{
+                                    marginBottom: "28px",
+                                    padding: "8px 24px",
+                                    borderRadius: "100px",
+                                    background: battle.currentTurn === "A" ? "rgba(201,168,76,0.12)" : "rgba(124,58,237,0.12)",
+                                    border: `1px solid ${battle.currentTurn === "A" ? "var(--gold-border)" : "rgba(124,58,237,0.4)"}`,
+                                    fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "0.75rem",
+                                    letterSpacing: "0.14em", textTransform: "uppercase",
+                                    color: battle.currentTurn === "A" ? "var(--gold-light)" : "#A78BFA",
+                                }}
+                            >
+                                {battle.currentTurn === "A" ? battleTeamA.teamName : battleTeamB.teamName} IS ROASTING
+                            </motion.div>
+                        </AnimatePresence>
+
+                        {/* Battle Timer Ring */}
+                        <svg width="210" height="210" viewBox="0 0 210 210" style={{ display: "block", marginBottom: "28px" }}>
+                            <circle cx="105" cy="105" r={bR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                            <circle
+                                cx="105" cy="105" r={bR}
+                                fill="none"
+                                stroke={bTColor}
+                                strokeWidth="12"
+                                strokeDasharray={bCirc}
+                                strokeDashoffset={bDash}
+                                strokeLinecap="round"
+                                transform="rotate(-90 105 105)"
+                                style={{ transition: "stroke-dashoffset 0.5s linear, stroke 0.5s" }}
+                            />
+                            <text x="105" y="97" textAnchor="middle" fill={bTColor}
+                                style={{ fontFamily: "var(--font-display)", fontSize: "44px", letterSpacing: "0.02em" }}>
+                                {bRemaining}
+                            </text>
+                            <text x="105" y="122" textAnchor="middle" fill="var(--text-dim)"
+                                style={{ fontFamily: "var(--font-ui)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.16em" }}>
+                                SECONDS
+                            </text>
+                            {!bRunning && (
+                                <text x="105" y="142" textAnchor="middle" fill="var(--text-dim)"
+                                    style={{ fontFamily: "var(--font-ui)", fontSize: "9px", letterSpacing: "0.12em" }}>
+                                    STOPPED
+                                </text>
+                            )}
+                        </svg>
+
+                        {/* Momentum Bar (chess-style) */}
+                        <div style={{ width: "100%", maxWidth: "560px", marginBottom: "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                                <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.68rem", fontWeight: 700, color: "var(--gold-light)", letterSpacing: "0.08em" }}>
+                                    {battleTeamA.teamName.toUpperCase()}  {bAvA > 0 ? `${Math.round((bAvA / (bAvTotal || 1)) * 100)}%` : ""}
+                                </span>
+                                <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.65rem", color: "var(--text-dim)", letterSpacing: "0.1em" }}>
+                                    AUDIENCE MOMENTUM
+                                </span>
+                                <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.68rem", fontWeight: 700, color: "#A78BFA", letterSpacing: "0.08em" }}>
+                                    {bAvB > 0 ? `${Math.round((bAvB / (bAvTotal || 1)) * 100)}%` : ""}  {battleTeamB.teamName.toUpperCase()}
+                                </span>
+                            </div>
+                            <div style={{ width: "100%", height: "14px", borderRadius: "8px", overflow: "hidden", background: "rgba(255,255,255,0.05)", display: "flex" }}>
+                                <motion.div
+                                    animate={{ width: `${bAvTotal ? (bAvA / bAvTotal) * 100 : 50}%` }}
+                                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                                    style={{ background: "linear-gradient(90deg, #C9A84C, #F59E0B)", height: "100%", borderRadius: "8px 0 0 8px" }}
+                                />
+                                <div style={{ flex: 1, background: "linear-gradient(90deg, #6D28D9, #7C3AED)", borderRadius: "0 8px 8px 0" }} />
+                            </div>
+                        </div>
+
+                        {/* Judge votes (admin-gated) */}
+                        {battle.judgeVotesVisible && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                style={{ marginTop: "16px", display: "flex", gap: "32px", alignItems: "center" }}
+                            >
+                                <div style={{ textAlign: "center" }}>
+                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--gold-light)" }}>{bJvA}</div>
+                                    <div style={{ color: "var(--text-dim)", fontSize: "0.65rem", letterSpacing: "0.1em" }}>JUDGE VOTES</div>
+                                </div>
+                                <div style={{ color: "var(--text-dim)", fontSize: "0.75rem", letterSpacing: "0.12em" }}>vs</div>
+                                <div style={{ textAlign: "center" }}>
+                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "#A78BFA" }}>{bJvB}</div>
+                                    <div style={{ color: "var(--text-dim)", fontSize: "0.65rem", letterSpacing: "0.1em" }}>JUDGE VOTES</div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Winner reveal (admin-gated) */}
+                        {battle.resultVisible && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: "spring", stiffness: 280, damping: 20 }}
+                                style={{
+                                    marginTop: "24px",
+                                    padding: "20px 36px",
+                                    borderRadius: "14px",
+                                    background: "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(124,58,237,0.15))",
+                                    border: "1px solid var(--gold-border)",
+                                    textAlign: "center",
+                                }}
+                            >
+                                <div style={{ fontFamily: "var(--font-ui)", fontSize: "0.65rem", letterSpacing: "0.18em", color: "var(--text-dim)", marginBottom: "6px" }}>WINNER ADVANCES</div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--gold-light)", letterSpacing: "0.06em" }}>
+                                    {bJvA >= bJvB ? battleTeamA.teamName : battleTeamB.teamName}
+                                </div>
+                            </motion.div>
+                        )}
+
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -94,3 +94,49 @@ export const initEventDefaults = async () => {
         await set(ref(db, "settings"), { judgeCount: 3 });
     }
 };
+
+// ── Battle ─────────────────────────────────────────────────────────────────
+export const startBattle = (teamAId: string, teamBId: string, timerDuration: number, roundNumber: number) =>
+    set(ref(db, "battle"), {
+        active: true,
+        teamAId,
+        teamBId,
+        currentTurn: "A",
+        timerDuration,
+        timerStartTime: null,
+        timerRunning: false,
+        audienceVoteOpen: false,
+        resultVisible: false,
+        judgeVotesVisible: false,
+        roundNumber,
+    });
+
+export const endBattle = () => set(ref(db, "battle"), { active: false });
+
+export const resetBattleVotes = () =>
+    Promise.all([
+        set(ref(db, "battleAudienceVotes"), null),
+        set(ref(db, "battleJudgeVotes"), null),
+    ]);
+
+export const setBattleTurn = (turn: "A" | "B") => update(ref(db, "battle"), { currentTurn: turn });
+
+export const startBattleTimer = (duration: number) =>
+    update(ref(db, "battle"), { timerDuration: duration, timerStartTime: Date.now(), timerRunning: true });
+
+export const resetBattleTimer = () =>
+    update(ref(db, "battle"), { timerRunning: false, timerStartTime: null });
+
+export const setBattleAudienceVoteOpen = (val: boolean) => update(ref(db, "battle"), { audienceVoteOpen: val });
+export const setBattleResultVisible = (val: boolean) => update(ref(db, "battle"), { resultVisible: val });
+export const setBattleJudgeVotesVisible = (val: boolean) => update(ref(db, "battle"), { judgeVotesVisible: val });
+export const setBattleRound = (n: number) => update(ref(db, "battle"), { roundNumber: n });
+
+// Audience vote — one vote per team (voterTeamId → "A" or "B")
+export const castAudienceVote = (voterTeamId: string, side: "A" | "B") =>
+    set(ref(db, `battleAudienceVotes/${voterTeamId}`), side);
+
+// Judge vote — one vote per judge
+export const castJudgeVote = (judgeId: string, side: "A" | "B") =>
+    set(ref(db, `battleJudgeVotes/${judgeId}`), side);
+

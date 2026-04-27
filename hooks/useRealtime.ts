@@ -94,3 +94,41 @@ export const useLeaderboard = () => {
         return (b.judgeAvg ?? -1) - (a.judgeAvg ?? -1);
     });
 };
+
+// ── Battle ─────────────────────────────────────────────────────────────────
+export const useBattle = () => useRealtimeValue<Record<string, any>>("battle");
+
+export const useBattleAudienceVotes = () =>
+    useRealtimeValue<Record<string, "A" | "B">>("battleAudienceVotes") ?? {};
+
+export const useBattleJudgeVotes = () =>
+    useRealtimeValue<Record<string, "A" | "B">>("battleJudgeVotes") ?? {};
+
+export const useBattleTimer = () => {
+    const battle = useBattle();
+    const [remaining, setRemaining] = useState<number>(60);
+
+    useEffect(() => {
+        if (!battle) return;
+        const { timerRunning, timerStartTime, timerDuration } = battle;
+        if (!timerRunning) {
+            setRemaining(timerDuration ?? 60);
+            return;
+        }
+        const tick = () => {
+            const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+            const left = Math.max(0, (timerDuration ?? 60) - elapsed);
+            setRemaining(left);
+        };
+        tick();
+        const interval = setInterval(tick, 500);
+        return () => clearInterval(interval);
+    }, [battle]);
+
+    return {
+        remaining,
+        total: battle?.timerDuration ?? 60,
+        running: battle?.timerRunning ?? false,
+    };
+};
+

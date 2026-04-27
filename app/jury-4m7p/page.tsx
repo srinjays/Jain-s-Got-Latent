@@ -3,8 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import PageShell from "@/components/ui/PageShell";
-import { useTeams, useEvent, useJudges } from "@/hooks/useRealtime";
-import { submitJudgeScore } from "@/lib/db";
+import { useTeams, useEvent, useJudges, useBattle, useBattleAudienceVotes, useBattleJudgeVotes } from "@/hooks/useRealtime";
+import { submitJudgeScore, castJudgeVote } from "@/lib/db";
 
 export default function JudgePage() {
     const router = useRouter();
@@ -21,6 +21,13 @@ export default function JudgePage() {
     const judges = useJudges();
     const teams = useTeams();
     const event = useEvent();
+    const battle = useBattle();
+    const battleAudienceVotes = useBattleAudienceVotes();
+    const battleJudgeVotes = useBattleJudgeVotes();
+
+    const battleTeamA = teams.find((t: any) => t.id === battle?.teamAId);
+    const battleTeamB = teams.find((t: any) => t.id === battle?.teamBId);
+    const myJudgeBattleVote = judge ? (battleJudgeVotes as any)?.[judge.id] : null;
     const currentTeamId = event?.currentTeamId;
     const currentTeam = teams.find((t: any) => t.id === currentTeamId);
     const scoringEnabled = event?.judgeScoringEnabled;
@@ -213,6 +220,69 @@ export default function JudgePage() {
 
                     {/* Browse All Teams */}
                     <BrowseTeams teams={teams} />
+
+                    {/* Battle Vote */}
+                    <AnimatePresence>
+                        {battle?.active && battleTeamA && battleTeamB && (
+                            <motion.div
+                                key="battle-vote"
+                                className="card"
+                                style={{ padding: "28px", marginTop: "24px" }}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <div style={{ marginBottom: "6px" }}>
+                                    <span className="badge badge-gold" style={{ fontSize: "0.68rem" }}>ROAST BATTLE — ROUND {battle.roundNumber}</span>
+                                </div>
+                                <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "var(--text)", letterSpacing: "0.04em", marginBottom: "6px" }}>
+                                    {battleTeamA.teamName}  vs  {battleTeamB.teamName}
+                                </div>
+                                <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", marginBottom: "20px" }}>Vote for the team that won this battle.</p>
+
+                                {!battle.resultVisible ? (
+                                    <div style={{ display: "flex", gap: "12px" }}>
+                                        <button
+                                            onClick={() => castJudgeVote(judge.id, "A")}
+                                            style={{
+                                                flex: 1, padding: "20px", borderRadius: "10px", cursor: "pointer", border: "none",
+                                                background: myJudgeBattleVote === "A" ? "var(--gold)" : "rgba(201,168,76,0.10)",
+                                                color: myJudgeBattleVote === "A" ? "#1a0f00" : "var(--gold-light)",
+                                                fontFamily: "var(--font-display)", fontSize: "1rem", letterSpacing: "0.04em",
+                                                fontWeight: 700, transition: "all 0.2s",
+                                                boxShadow: myJudgeBattleVote === "A" ? "0 0 20px rgba(201,168,76,0.3)" : "none",
+                                            }}
+                                        >
+                                            {battleTeamA.teamName}
+                                        </button>
+                                        <button
+                                            onClick={() => castJudgeVote(judge.id, "B")}
+                                            style={{
+                                                flex: 1, padding: "20px", borderRadius: "10px", cursor: "pointer", border: "none",
+                                                background: myJudgeBattleVote === "B" ? "#7C3AED" : "rgba(124,58,237,0.10)",
+                                                color: myJudgeBattleVote === "B" ? "#fff" : "#A78BFA",
+                                                fontFamily: "var(--font-display)", fontSize: "1rem", letterSpacing: "0.04em",
+                                                fontWeight: 700, transition: "all 0.2s",
+                                                boxShadow: myJudgeBattleVote === "B" ? "0 0 20px rgba(124,58,237,0.3)" : "none",
+                                            }}
+                                        >
+                                            {battleTeamB.teamName}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="row-item" style={{ padding: "16px", textAlign: "center" }}>
+                                        <p style={{ color: "#6EE7B7", fontWeight: 700 }}>Result revealed — voting closed</p>
+                                    </div>
+                                )}
+
+                                {myJudgeBattleVote && !battle.resultVisible && (
+                                    <p style={{ color: "var(--text-dim)", fontSize: "0.78rem", textAlign: "center", marginTop: "12px" }}>
+                                        Voted for {myJudgeBattleVote === "A" ? battleTeamA.teamName : battleTeamB.teamName} — tap to change
+                                    </p>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </PageShell>
