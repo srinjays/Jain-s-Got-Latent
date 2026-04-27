@@ -115,7 +115,40 @@ function ParticipantContent() {
                 </motion.div>
 
                 <div style={{ width: "100%", maxWidth: "640px", display: "flex", flexDirection: "column", gap: "14px" }}>
+
+                    {/* Battle Banner — shown at top when battle is live */}
+                    <AnimatePresence>
+                        {battle?.active && battleTeamA && battleTeamB && (
+                            <motion.div
+                                key="battle-banner"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                style={{
+                                    padding: "14px 18px",
+                                    borderRadius: "10px",
+                                    background: "linear-gradient(135deg, rgba(201,168,76,0.18), rgba(124,58,237,0.18))",
+                                    border: "1px solid var(--gold-border)",
+                                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                                }}
+                            >
+                                <div>
+                                    <div style={{ fontFamily: "var(--font-ui)", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.16em", color: "var(--gold)", marginBottom: "3px" }}>
+                                        ROAST BATTLE LIVE
+                                    </div>
+                                    <div style={{ fontFamily: "var(--font-display)", fontSize: "0.95rem", color: "var(--text)", letterSpacing: "0.04em" }}>
+                                        {battleTeamA.teamName} <span style={{ color: "var(--text-dim)", fontSize: "0.7rem" }}>vs</span> {battleTeamB.teamName}
+                                    </div>
+                                </div>
+                                {battle.audienceVoteOpen && (
+                                    <span className="badge badge-gold" style={{ fontSize: "0.6rem", letterSpacing: "0.1em" }}>VOTE OPEN</span>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {/* Team card */}
+
                     <motion.div className="card" style={{ padding: "22px" }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
                         <span className="label-cap" style={{ color: "var(--gold)" }}>Your Project</span>
                         <p style={{ color: "var(--text)", lineHeight: 1.6, marginBottom: "14px" }}>{t?.projectIdea}</p>
