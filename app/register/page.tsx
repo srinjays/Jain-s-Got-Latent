@@ -7,7 +7,7 @@ import { registerTeam } from "@/lib/db";
 
 const BRANCHES = ["CSE", "ISE", "ECE", "EEE", "ME", "CV", "AIML", "DS", "CY"];
 const YEARS = ["1st", "2nd", "3rd", "4th"];
-const USN_RE = /^[0-9]{2}[A-Z]{2}[0-9]{2}[A-Z]{2,3}[0-9]{3}$/i;
+
 
 const empty = () => ({ name: "", usn: "", branch: "CSE", year: "2nd", funFacts: ["", "", ""] });
 
@@ -47,7 +47,6 @@ export default function RegisterPage() {
             const m = members[i];
             if (!m.name.trim()) return `Member ${i + 1}: Full name is required`;
             if (!m.usn.trim()) return `Member ${i + 1}: USN is required`;
-            if (!USN_RE.test(m.usn.trim())) return `Member ${i + 1}: USN format invalid (e.g. 01FE21CS001)`;
             if (!m.branch) return `Member ${i + 1}: Branch is required`;
             if (!m.year) return `Member ${i + 1}: Year is required`;
             for (let fi = 0; fi < 3; fi++) {
@@ -135,7 +134,7 @@ export default function RegisterPage() {
                             </div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                                 <Field label="Full Name *"><input className="input" value={m.name} onChange={e => upd(i, "name", e.target.value)} placeholder="Your name" /></Field>
-                                <Field label="USN *"><input className="input" value={m.usn} onChange={e => upd(i, "usn", e.target.value.toUpperCase())} placeholder="01FE21CS001" /></Field>
+                                <Field label="USN *"><input className="input" value={m.usn} onChange={e => upd(i, "usn", e.target.value.toUpperCase())} placeholder="Your USN" /></Field>
                                 <Field label="Branch *">
                                     <select className="input" value={m.branch} onChange={e => upd(i, "branch", e.target.value)}>
                                         <option value="">— Select —</option>
