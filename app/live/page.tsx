@@ -137,6 +137,15 @@ export default function LivePage() {
         if (battle?.active) setTab("battle");
     }, [battle?.active]);
 
+    // 🎉 Confetti when battle winner is revealed
+    const prevResultVisible = useRef(false);
+    useEffect(() => {
+        if (battle?.resultVisible && !prevResultVisible.current) {
+            fireConfetti();
+        }
+        prevResultVisible.current = !!battle?.resultVisible;
+    }, [battle?.resultVisible]);
+
     // Check if current team's scores match
     const scoresMatch = currentLb?.selfScore != null && currentLb?.judgeAvg != null
         && Math.abs(currentLb.selfScore - currentLb.judgeAvg) <= 0.5;
@@ -552,8 +561,8 @@ export default function LivePage() {
                                                 </motion.div>
                                             </AnimatePresence>
 
-                                            {/* Battle Timer Ring */}
-                                            <svg width="180" height="180" viewBox="0 0 180 180" style={{ display: "block" }}>
+                                            {/* Battle Timer Ring — viewBox padded so stroke isn't clipped */}
+                                            <svg width="200" height="200" viewBox="-10 -10 200 200" style={{ display: "block" }}>
                                                 <circle cx="90" cy="90" r={bR} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
                                                 <circle cx="90" cy="90" r={bR} fill="none" stroke={bTColor} strokeWidth="10"
                                                     strokeDasharray={bCirc} strokeDashoffset={bDash} strokeLinecap="round"
