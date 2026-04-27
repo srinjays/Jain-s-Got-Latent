@@ -12,6 +12,7 @@ import {
     approveRoast, rejectRoast,
     addJudge, removeJudge,
     uploadMemeFile, setTeamEliminated, setTeamSelected, deleteTeam, updateTeam,
+    setLeaderboardVisible,
 } from "@/lib/db";
 import { db } from "@/lib/firebase";
 import { ref, push, remove, set } from "firebase/database";
@@ -483,6 +484,26 @@ export default function AdminPage() {
                             {/* ── LEADERBOARD ───────────────────────────── */}
                             {tab === 5 && (
                                 <ACard title="Leaderboard Control">
+                                    {/* Visibility toggle */}
+                                    <div style={{ marginBottom: "18px", padding: "14px 16px", borderRadius: "10px", background: event?.leaderboardVisible ? "rgba(110,231,183,0.08)" : "rgba(248,113,113,0.08)", border: `1px solid ${event?.leaderboardVisible ? "rgba(110,231,183,0.3)" : "rgba(248,113,113,0.3)"}` }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                            <div>
+                                                <div style={{ color: event?.leaderboardVisible ? "#6EE7B7" : "#F87171", fontWeight: 700, fontSize: "0.88rem" }}>
+                                                    {event?.leaderboardVisible ? "👁 Leaderboard: VISIBLE to public" : "🙈 Leaderboard: HIDDEN from public"}
+                                                </div>
+                                                <div style={{ color: "var(--text-dim)", fontSize: "0.73rem", marginTop: "3px" }}>
+                                                    Controls visibility on Live screen &amp; Participant portal
+                                                </div>
+                                            </div>
+                                            <button
+                                                className={event?.leaderboardVisible ? "btn-danger" : "btn-gold"}
+                                                style={{ fontSize: "0.78rem", padding: "8px 18px", flexShrink: 0 }}
+                                                onClick={() => setLeaderboardVisible(!event?.leaderboardVisible)}
+                                            >
+                                                {event?.leaderboardVisible ? "Hide" : "Show"}
+                                            </button>
+                                        </div>
+                                    </div>
                                     <p style={{ color: "var(--text-sub)", fontSize: "0.82rem", marginBottom: "16px" }}>
                                         Shows judge marks only. Toggle <strong style={{ color: "#F87171" }}>Eliminate</strong> to remove a team from the running.
                                     </p>

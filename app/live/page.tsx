@@ -240,85 +240,101 @@ export default function LivePage() {
                             {/* ── LEADERBOARD TAB ────────────────── */}
                             {tab === "leaderboard" && (
                                 <motion.div key="lb" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                        {leaderboard.slice(0, 10).map((team: any, i: number) => {
-                                            const isCurrent = team.id === event?.currentTeamId;
-                                            const isSelected = !!team.selected;
-                                            const top3 = i < 3 && !team.eliminated;
-                                            return (
-                                                <motion.div
-                                                    key={team.id}
-                                                    layout
-                                                    initial={{ opacity: 0, x: 12 }}
-                                                    animate={{ opacity: team.eliminated ? 0.35 : 1, x: 0 }}
-                                                    transition={{ delay: i * 0.035 }}
-                                                    className={isCurrent && !team.eliminated ? "row-active" : "row-item"}
-                                                    style={{
-                                                        display: "grid",
-                                                        gridTemplateColumns: "44px 1fr auto",
-                                                        alignItems: "center",
-                                                        padding: top3 ? "14px 18px" : "10px 18px",
-                                                        gap: "14px",
-                                                        background: isSelected && !isCurrent && !team.eliminated ? "rgba(139,92,246,0.08)" : undefined,
-                                                    }}
-                                                >
-                                                    <span style={{
-                                                        fontFamily: "var(--font-display)",
-                                                        fontSize: top3 ? "1.2rem" : "0.88rem",
-                                                        color: team.eliminated ? "#F87171" : top3 ? "var(--gold-light)" : "var(--text-dim)",
-                                                        lineHeight: 1,
-                                                    }}>
-                                                        {team.eliminated ? "✕" : top3 ? MEDALS[i] : `#${i + 1}`}
-                                                    </span>
-
-                                                    <div style={{ minWidth: 0 }}>
-                                                        <div style={{
-                                                            fontFamily: "var(--font-ui)",
-                                                            fontWeight: top3 ? 700 : 500,
-                                                            fontSize: top3 ? "0.94rem" : "0.84rem",
-                                                            color: team.eliminated ? "var(--text-dim)" : isCurrent ? "var(--gold-light)" : top3 ? "var(--text)" : "var(--text-sub)",
-                                                            letterSpacing: "0.05em",
-                                                            textTransform: "uppercase",
-                                                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                                                            textDecoration: team.eliminated ? "line-through" : "none",
-                                                        }}>
-                                                            {isCurrent && !team.eliminated && "▸ "}{team.teamName}
-                                                        </div>
-                                                        {team.eliminated && (
-                                                            <span className="badge badge-red" style={{ fontSize: "0.55rem", marginTop: "3px" }}>eliminated</span>
-                                                        )}
-                                                        {isCurrent && !team.eliminated && (
-                                                            <span className="badge badge-gold" style={{ fontSize: "0.55rem", marginTop: "3px" }}>ON STAGE</span>
-                                                        )}
-                                                        {isSelected && !isCurrent && !team.eliminated && (
-                                                            <span className="badge badge-purple" style={{ fontSize: "0.55rem", marginTop: "3px" }}>SELECTED</span>
-                                                        )}
-                                                    </div>
-
-                                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                    {event?.leaderboardVisible ? (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                            {leaderboard.slice(0, 10).map((team: any, i: number) => {
+                                                const isCurrent = team.id === event?.currentTeamId;
+                                                const isSelected = !!team.selected;
+                                                const top3 = i < 3 && !team.eliminated;
+                                                return (
+                                                    <motion.div
+                                                        key={team.id}
+                                                        layout
+                                                        initial={{ opacity: 0, x: 12 }}
+                                                        animate={{ opacity: team.eliminated ? 0.35 : 1, x: 0 }}
+                                                        transition={{ delay: i * 0.035 }}
+                                                        className={isCurrent && !team.eliminated ? "row-active" : "row-item"}
+                                                        style={{
+                                                            display: "grid",
+                                                            gridTemplateColumns: "44px 1fr auto",
+                                                            alignItems: "center",
+                                                            padding: top3 ? "14px 18px" : "10px 18px",
+                                                            gap: "14px",
+                                                            background: isSelected && !isCurrent && !team.eliminated ? "rgba(139,92,246,0.08)" : undefined,
+                                                        }}
+                                                    >
                                                         <span style={{
                                                             fontFamily: "var(--font-display)",
-                                                            fontSize: top3 ? "1.6rem" : "1.05rem",
-                                                            color: team.eliminated ? "var(--text-dim)" : top3 ? "var(--text)" : "var(--text-sub)",
-                                                            letterSpacing: "0.02em",
+                                                            fontSize: top3 ? "1.2rem" : "0.88rem",
+                                                            color: team.eliminated ? "#F87171" : top3 ? "var(--gold-light)" : "var(--text-dim)",
+                                                            lineHeight: 1,
                                                         }}>
-                                                            {team.judgeAvg ?? "—"}
+                                                            {team.eliminated ? "✕" : top3 ? MEDALS[i] : `#${i + 1}`}
                                                         </span>
-                                                        {top3 && team.judgeAvg != null && (
-                                                            <span style={{ fontSize: "0.58rem", color: "var(--text-dim)", marginLeft: "3px", fontWeight: 700, letterSpacing: "0.08em" }}>
-                                                                MRK
+
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div style={{
+                                                                fontFamily: "var(--font-ui)",
+                                                                fontWeight: top3 ? 700 : 500,
+                                                                fontSize: top3 ? "0.94rem" : "0.84rem",
+                                                                color: team.eliminated ? "var(--text-dim)" : isCurrent ? "var(--gold-light)" : top3 ? "var(--text)" : "var(--text-sub)",
+                                                                letterSpacing: "0.05em",
+                                                                textTransform: "uppercase",
+                                                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                                                textDecoration: team.eliminated ? "line-through" : "none",
+                                                            }}>
+                                                                {isCurrent && !team.eliminated && "▸ "}{team.teamName}
+                                                            </div>
+                                                            {team.eliminated && (
+                                                                <span className="badge badge-red" style={{ fontSize: "0.55rem", marginTop: "3px" }}>eliminated</span>
+                                                            )}
+                                                            {isCurrent && !team.eliminated && (
+                                                                <span className="badge badge-gold" style={{ fontSize: "0.55rem", marginTop: "3px" }}>ON STAGE</span>
+                                                            )}
+                                                            {isSelected && !isCurrent && !team.eliminated && (
+                                                                <span className="badge badge-purple" style={{ fontSize: "0.55rem", marginTop: "3px" }}>SELECTED</span>
+                                                            )}
+                                                        </div>
+
+                                                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                                            <span style={{
+                                                                fontFamily: "var(--font-display)",
+                                                                fontSize: top3 ? "1.6rem" : "1.05rem",
+                                                                color: team.eliminated ? "var(--text-dim)" : top3 ? "var(--text)" : "var(--text-sub)",
+                                                                letterSpacing: "0.02em",
+                                                            }}>
+                                                                {team.judgeAvg ?? "—"}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                        {leaderboard.length === 0 && (
-                                            <div style={{ textAlign: "center", padding: "32px", color: "var(--text-dim)", fontSize: "0.88rem" }}>
-                                                Waiting for teams to register…
+                                                            {top3 && team.judgeAvg != null && (
+                                                                <span style={{ fontSize: "0.58rem", color: "var(--text-dim)", marginLeft: "3px", fontWeight: 700, letterSpacing: "0.08em" }}>
+                                                                    MRK
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                            {leaderboard.length === 0 && (
+                                                <div style={{ textAlign: "center", padding: "32px", color: "var(--text-dim)", fontSize: "0.88rem" }}>
+                                                    Waiting for teams to register…
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.96 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            style={{ textAlign: "center", padding: "48px 20px" }}
+                                        >
+                                            <div style={{ fontSize: "3rem", marginBottom: "14px" }}>🏆</div>
+                                            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "var(--text)", letterSpacing: "0.08em", marginBottom: "8px" }}>
+                                                LEADERBOARD
                                             </div>
-                                        )}
-                                    </div>
+                                            <p style={{ color: "var(--text-dim)", fontSize: "0.85rem" }}>
+                                                Will be revealed by the admin
+                                            </p>
+                                        </motion.div>
+                                    )}
                                 </motion.div>
                             )}
 

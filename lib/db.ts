@@ -55,6 +55,7 @@ export const setSelfScoreEnabled = (val: boolean) => update(ref(db, "event"), { 
 export const setJudgeScoringEnabled = (val: boolean) => update(ref(db, "event"), { judgeScoringEnabled: val });
 export const setSelfScoreRevealed = (val: boolean) => update(ref(db, "event"), { selfScoreRevealed: val });
 export const setJudgeScoreRevealed = (val: boolean) => update(ref(db, "event"), { judgeScoreRevealed: val });
+export const setLeaderboardVisible = (val: boolean) => update(ref(db, "event"), { leaderboardVisible: val });
 export const setPhase = (phase: string) => update(ref(db, "event"), { phase });
 
 // ── Memes ──────────────────────────────────────────────────────────────────
@@ -83,6 +84,7 @@ export const initEventDefaults = async () => {
             currentTeamId: null, timerDuration: 90, timerStartTime: null,
             timerRunning: false, selfScoreEnabled: false, judgeScoringEnabled: false,
             selfScoreRevealed: false, judgeScoreRevealed: false, phase: "idle",
+            leaderboardVisible: false,
         });
     }
     // Memes are now uploaded by admin — no placeholders seeded

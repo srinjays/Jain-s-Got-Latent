@@ -3,7 +3,7 @@ import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import PageShell from "@/components/ui/PageShell";
-import { useTeams, useEvent } from "@/hooks/useRealtime";
+import { useTeams, useEvent, useLeaderboard } from "@/hooks/useRealtime";
 import { submitSelfScore, submitRoast } from "@/lib/db";
 
 function ParticipantContent() {
@@ -21,6 +21,7 @@ function ParticipantContent() {
 
     const teams = useTeams();
     const event = useEvent();
+    const leaderboard = useLeaderboard();
 
     const handleLogin = () => {
         const found = teams.find((t: any) => t.pin === pinInput.trim());
@@ -178,6 +179,74 @@ function ParticipantContent() {
                             FIRE AWAY 🔥
                         </button>
                     </motion.div>
+
+                    {/* Leaderboard — only shown when admin enables it */}
+                    <AnimatePresence>
+                        {event?.leaderboardVisible && (
+                            <motion.div
+                                key="lb-card"
+                                className="card"
+                                style={{ padding: "22px" }}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <span className="label-cap" style={{ color: "var(--gold)" }}>🏆 Leaderboard</span>
+                                <p style={{ color: "var(--text-sub)", fontSize: "0.78rem", marginBottom: "14px" }}>Live rankings — judge scores only.</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    {leaderboard.slice(0, 10).map((team: any, i: number) => {
+                                        const isCurrent = team.id === event?.currentTeamId;
+                                        const isSelected = !!team.selected;
+                                        const isMe = team.id === currentTeam?.id;
+                                        return (
+                                            <div
+                                                key={team.id}
+                                                style={{
+                                                    display: "grid",
+                                                    gridTemplateColumns: "36px 1fr auto",
+                                                    alignItems: "center",
+                                                    gap: "10px",
+                                                    padding: "10px 14px",
+                                                    borderRadius: "8px",
+                                                    background: isMe ? "rgba(201,168,76,0.10)" : isCurrent ? "rgba(201,168,76,0.06)" : isSelected ? "rgba(139,92,246,0.06)" : "rgba(255,255,255,0.03)",
+                                                    border: isMe ? "1px solid var(--gold-border)" : "1px solid transparent",
+                                                    opacity: team.eliminated ? 0.4 : 1,
+                                                }}
+                                            >
+                                                <span style={{ fontFamily: "var(--font-display)", fontSize: "0.9rem", color: team.eliminated ? "#F87171" : "var(--text-dim)" }}>
+                                                    {team.eliminated ? "✕" : `#${i + 1}`}
+                                                </span>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{
+                                                        fontWeight: isMe ? 700 : 500,
+                                                        fontSize: "0.83rem",
+                                                        color: isMe ? "var(--gold-light)" : team.eliminated ? "var(--text-dim)" : "var(--text)",
+                                                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                                        textDecoration: team.eliminated ? "line-through" : "none",
+                                                    }}>
+                                                        {team.teamName}{isMe && " (you)"}
+                                                    </div>
+                                                    {isCurrent && !team.eliminated && (
+                                                        <span className="badge badge-gold" style={{ fontSize: "0.5rem", marginTop: "2px" }}>ON STAGE</span>
+                                                    )}
+                                                    {isSelected && !isCurrent && !team.eliminated && (
+                                                        <span className="badge badge-purple" style={{ fontSize: "0.5rem", marginTop: "2px" }}>SELECTED</span>
+                                                    )}
+                                                </div>
+                                                <span style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: team.eliminated ? "var(--text-dim)" : "var(--gold-light)", fontWeight: 700 }}>
+                                                    {team.judgeAvg ?? "—"}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                    {leaderboard.length === 0 && (
+                                        <p style={{ color: "var(--text-dim)", fontSize: "0.85rem", textAlign: "center", padding: "12px 0" }}>No scores yet.</p>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </PageShell>
