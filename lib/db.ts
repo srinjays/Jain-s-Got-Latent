@@ -87,8 +87,16 @@ export const initEventDefaults = async () => {
             leaderboardVisible: false,
         });
     }
-    // Memes are now uploaded by admin — no placeholders seeded
-    // Settings — do NOT seed adminPin into Firebase (that would expose it publicly)
+    // Seed battle node so the rules path exists
+    const battleSnap = await get(ref(db, "battle"));
+    if (!battleSnap.exists()) {
+        await set(ref(db, "battle"), {
+            active: false, teamAId: null, teamBId: null, currentTurn: "A",
+            timerDuration: 60, timerStartTime: null, timerRunning: false,
+            audienceVoteOpen: false, resultVisible: false, judgeVotesVisible: false,
+            roundNumber: 1,
+        });
+    }
     const settingsSnap = await get(ref(db, "settings"));
     if (!settingsSnap.exists()) {
         await set(ref(db, "settings"), { judgeCount: 3 });
